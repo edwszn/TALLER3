@@ -1,0 +1,14 @@
+# Ejecutables (Windows y Linux)
+*.exe
+*.out
+programa
+
+# Archivos de objeto (compilación)
+*.o
+
+# Carpetas de configuración de VS Code
+.vscode/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
