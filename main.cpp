@@ -53,3 +53,52 @@
 
 //     return 0;
 // }
+
+
+//aqui empieza lo de la solucion 2
+#include "Solucion2.cpp" // para que el main reciba el archivo solucion2.cpp
+#include <iostream>
+#include <fstream>  
+#include <string>   
+#include <cstring>  
+
+
+int main() {
+    // 1. Crear la grilla con el factor k (probamos con 32)
+    // El k es el que pide el profe (8, 32, 128, 512)
+    GrillaNiveles miGrilla(32); 
+
+    std::ifstream archivoD1("D1.txt");
+    std::string linea;
+
+    if (!archivoD1.is_open()) {
+        std::cout << "No pude abrir D1.txt" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Cargando palabras en el nivel base..." << std::endl;
+    while (archivoD1 >> linea) {
+        // Convertimos string a uchar* para que la clase lo acepte
+        uchar* palabraPtr = new uchar[linea.length() + 1];
+        std::strcpy((char*)palabraPtr, linea.c_str());
+        
+        miGrilla.insertarNivelBase(palabraPtr);
+    }
+    archivoD1.close();
+
+    // 2. ESTO ES LO MÁS IMPORTANTE!!!!!!!!!!!!!!!!
+    // Crea los niveles superiores (los atajos)
+    std::cout << "Construyendo la grilla de niveles..." << std::endl;
+    miGrilla.construirNivelesSuperiores();
+
+    // 3. Probar si funciona
+    std::cout << "Buscando la palabra deseada:" << std::endl;  
+    if (miGrilla.buscar("university")) {   // aqui va la palabra que queremos buscar
+        std::cout << "Logrado! La grilla encontro la palabra." << std::endl;
+    } else {
+        std::cout << "No se encontro, pero la grilla funciona." << std::endl;
+    }
+
+    return 0;
+}
+//hasta aqui llega lo de la solucion 2
