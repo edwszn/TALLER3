@@ -55,50 +55,117 @@
 // }
 
 
-//aqui empieza lo de la solucion 2
-#include "Solucion2.cpp" // para que el main reciba el archivo solucion2.cpp
+// aqui comienza la solución 2
 #include <iostream>
-#include <fstream>  
-#include <string>   
-#include <cstring>  
+#include <fstream>
+#include <string>
+#include <cstring>
+#include <vector>
+#include <algorithm> // Para shuffle
+#include <random>    // Para random_device
+#include <chrono>    // Para medir tiempos 
+#include "Solucion2.cpp" // para que lea el archivo solucion2
 
+using namespace std;
+using namespace std::chrono;
 
 int main() {
-    // 1. Crear la grilla con el factor k (probamos con 32)
-    // El k es el que pide el profe (8, 32, 128, 512)
-    GrillaNiveles miGrilla(32); 
+    int factorK = 8; // Este es el "salto", se cambia a 32, 128, 512 para comparar las velocidades
+    GrillaNiveles miGrilla(factorK);
 
-    std::ifstream archivoD1("D1.txt");
-    std::string linea;
-
+    //PASO 1: CARGA DE D1
+    ifstream archivoD1("D1.txt");
+    string linea;
     if (!archivoD1.is_open()) {
-        std::cout << "No pude abrir D1.txt" << std::endl;
+        cout << "Error: No se pudo abrir D1.txt" << endl;
         return 1;
     }
 
-    std::cout << "Cargando palabras en el nivel base..." << std::endl;
+    cout << "PASO 1: Cargando D1 en memoria" << endl;
     while (archivoD1 >> linea) {
-        // Convertimos string a uchar* para que la clase lo acepte
-        uchar* palabraPtr = new uchar[linea.length() + 1];
-        std::strcpy((char*)palabraPtr, linea.c_str());
+        // Limpieza básica por si el archivo viene de Windows/Linux mezclado
+        if (!linea.empty() && (linea.back() == '\r' || linea.back() == '\n')) linea.pop_back();
         
+        uchar* palabraPtr = new uchar[linea.length() + 1];
+        strcpy((char*)palabraPtr, linea.c_str());
         miGrilla.insertarNivelBase(palabraPtr);
     }
     archivoD1.close();
 
-    // 2. ESTO ES LO MÁS IMPORTANTE!!!!!!!!!!!!!!!!
-    // Crea los niveles superiores (los atajos)
-    std::cout << "Construyendo la grilla de niveles..." << std::endl;
+    //PASO 2: CONSTRUCCIÓN DE LA ESTRUCTURA
+    cout << "PASO 2: Construyendo niveles superiores..." << endl;
     miGrilla.construirNivelesSuperiores();
 
-    // 3. Probar si funciona
-    std::cout << "Buscando la palabra deseada:" << std::endl;  
-    if (miGrilla.buscar("university")) {   // aqui va la palabra que queremos buscar
-        std::cout << "Logrado! La grilla encontro la palabra." << std::endl;
-    } else {
-        std::cout << "No se encontro, pero la grilla funciona." << std::endl;
+    //PREPARACIÓN DE D2 (para que sean aleatorios) 
+    ifstream archivoD2("D2.txt");
+    vector<string> palabrasD2;
+    if (!archivoD2.is_open()) {
+        cout << "Error: No se pudo abrir D2.txt" << endl;
+        return 1;
+    }
+    
+    while (archivoD2 >> linea) {
+        // Limpieza para los caracteres invisibles
+        if (!linea.empty() && (linea.back() == '\r' || linea.back() == '\n')) linea.pop_back();
+        if (!linea.empty()) palabrasD2.push_back(linea);
+    }
+    archivoD2.close();
+
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(palabrasD2.begin(), palabrasD2.end(), g);
+
+    //PASO 3: EXPERIMENTOS 
+    cout << "Iniciando experimentos aleatorios con " << palabrasD2.size() << " palabras..." << endl;
+
+    int encontradas = 0;
+    int insertadas = 0;
+    int eliminadas = 0;
+
+    // Inicia el cronometro para tomar los tiempos
+    auto inicioTotal = high_resolution_clock::now();
+
+    for (int i = 0; i < (int)palabrasD2.size(); i++) {
+        const char* p = palabrasD2[i].c_str();
+
+        if (i < 5000) {
+            // EXPERIMENTO A: Buscar e Insertar si no existe
+            if (!miGrilla.buscar(p)) {
+                uchar* nueva = new uchar[strlen(p) + 1];
+                strcpy((char*)nueva, p);
+                miGrilla.insertarOrdenado(nueva);
+                insertadas++;
+            } else {
+                encontradas++;
+            }
+        } else {
+            // EXPERIMENTO B: Buscar y Eliminar si existe
+            if (miGrilla.buscar(p)) {
+                miGrilla.eliminar(p);
+                eliminadas++;
+            }
+        }
+
+        // Pequeño indicador de progreso, para que no se vea la terminal tan pegada
+        if (i % 2500 == 0 && i > 0) cout << "...procesadas " << i << " palabras" << endl;
     }
 
+    auto finTotal = high_resolution_clock::now();
+    duration<double, milli> tiempo = finTotal - inicioTotal;
+
+    // RESULTADOS PARA EL INFORME
+    cout << "RESULTADOS ETAPA 1 - SOLUCION 2" << endl;
+    cout << "============================================" << endl;
+    cout << "Factor k:             " << factorK << endl;
+    cout << "Tiempo de ejecucion:  " << tiempo.count() << " ms" << endl;
+    cout << "Palabras insertadas:  " << insertadas << endl;
+    cout << "Palabras eliminadas:  " << eliminadas << endl;
+    cout << "Total procesadas D2:  " << palabrasD2.size() << endl;
+    cout << "============================================" << endl;
+
+    cout << "Verificando consistencia..." << endl;
+    if (!miGrilla.buscar("palabra_que_no_existe_seguro")) {
+    cout << "Confirmado: La busqueda arroja negativo para claves inexistentes." << endl;
+}
     return 0;
 }
-//hasta aqui llega lo de la solucion 2
