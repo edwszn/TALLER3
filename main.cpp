@@ -70,7 +70,7 @@ using namespace std;
 using namespace std::chrono;
 
 int main() {
-    int factorK = 8; // Este es el "salto", se cambia a 32, 128, 512 para comparar las velocidades
+    int factorK = 512; // Este es el "salto", lo podemos cambiar a 8, 32, 128, 512 para comparar las velocidades
     GrillaNiveles miGrilla(factorK);
 
     //PASO 1: CARGA DE D1
@@ -92,7 +92,7 @@ int main() {
     }
     archivoD1.close();
 
-    //PASO 2: CONSTRUCCIÓN DE LA ESTRUCTURA
+    // CONSTRUCCIÓN DE LA ESTRUCTURA
     cout << "PASO 2: Construyendo niveles superiores..." << endl;
     miGrilla.construirNivelesSuperiores();
 
@@ -115,7 +115,7 @@ int main() {
     mt19937 g(rd());
     shuffle(palabrasD2.begin(), palabrasD2.end(), g);
 
-    //PASO 3: EXPERIMENTOS 
+    // EXPERIMENTOS 
     cout << "Iniciando experimentos aleatorios con " << palabrasD2.size() << " palabras..." << endl;
 
     int encontradas = 0;
@@ -153,7 +153,7 @@ int main() {
     auto finTotal = high_resolution_clock::now();
     duration<double, milli> tiempo = finTotal - inicioTotal;
 
-    // RESULTADOS PARA EL INFORME
+    // RESULTADOS
     cout << "RESULTADOS ETAPA 1 - SOLUCION 2" << endl;
     cout << "============================================" << endl;
     cout << "Factor k:             " << factorK << endl;

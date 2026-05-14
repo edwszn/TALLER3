@@ -65,7 +65,7 @@ public:
         while (viajero != nullptr) {
             if (contador % k == 0) {
                 Nodo* nuevoArriba = new Nodo(viajero->clave, viajero);
-                viajero->arriba = nuevoArriba; // CONEXIÓN VITAL
+                viajero->arriba = nuevoArriba; //IMPORTANTEE
                 nodosEnNivelSuperior++;
 
                 if (cabezas[nivelActual + 1] == nullptr) {
@@ -104,7 +104,7 @@ bool buscar(const char* palabraBuscada) {
 
         if (nivelActual > 0) {
             aux = aux->abajo;
-            if (aux == nullptr) return false; // Seguridad
+            if (aux == nullptr) return false; // por Seguridad
         }
         nivelActual--;
     }
@@ -124,7 +124,7 @@ bool buscar(const char* palabraBuscada) {
 
     //M. de Eliminar.
     void eliminar(const char* palabraAEliminar) {
-    // 1. Buscar el nodo en el nivel base (L1)
+    //Buscar el nodo en el nivel base (L1)
     Nodo* aux = cabezas[0];
     while (aux != nullptr) {
         if (std::strcmp((char*)aux->clave, palabraAEliminar) == 0) break;
@@ -134,11 +134,11 @@ bool buscar(const char* palabraBuscada) {
     // Si no existe en el nivel base, no hay nada que borrar
     if (aux == nullptr) return;
 
-    // 2. REGLA DEL PDF: Buscar la palabra que reemplazará la etiqueta arriba
+    // Buscar la palabra que reemplazará la etiqueta arriba
     // Es la palabra que viene inmediatamente después en el nivel base
     const char* reemplazo = (aux->sig != nullptr) ? (char*)aux->sig->clave : nullptr;
 
-    // 3. Subir por la "columna" de ese nodo hacia arriba
+    // Subir por la columna de ese nodo hacia arriba
     Nodo* actual = aux;
     int nivel = 0;
 
@@ -149,7 +149,7 @@ bool buscar(const char* palabraBuscada) {
         if (std::strcmp((char*)actual->clave, palabraAEliminar) == 0) {
             if (reemplazo != nullptr) {
                 // CASO A: Hay una palabra siguiente, así que solo actualizamos la "etiqueta"
-                // Esto mantiene la estructura de la grilla intacta según el PDF
+                // Esto mantiene la estructura de la grilla intacta 
                 actual->clave = (uchar*)reemplazo;
             } else {
                 // CASO B: No hay reemplazo (era la última palabra), hay que desconectar el nodo
@@ -170,7 +170,7 @@ bool buscar(const char* palabraBuscada) {
         nivel++;
     }
 
-    // 4. Borrado físico del nodo en el nivel base (L1)
+    // Borrado físico del nodo en el nivel base (L1)
     if (aux->ant != nullptr) aux->ant->sig = aux->sig;
     if (aux->sig != nullptr) aux->sig->ant = aux->ant;
     if (aux == cabezas[0]) cabezas[0] = aux->sig;
@@ -179,7 +179,7 @@ bool buscar(const char* palabraBuscada) {
     delete aux;
 }
 void insertarOrdenado(uchar* palabra) {
-    // 1. Buscamos la posición en el nivel base (L1)
+    // Buscamos la posición en el nivel base (L1)
     Nodo* aux = cabezas[0];
     Nodo* anterior = nullptr;
 
@@ -189,10 +189,10 @@ void insertarOrdenado(uchar* palabra) {
         aux = aux->sig;
     }
 
-    // 2. Si la palabra ya existe, no hacemos nada (evita duplicados)
+    // Si la palabra ya existe, no hacemos nada 
     if (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) == 0) return;
 
-    // 3. Insertar el nuevo nodo en la lista doblemente enlazada
+    //Insertar el nuevo nodo en la lista doblemente enlazada
     Nodo* nuevo = new Nodo(palabra);
     nuevo->sig = aux;
     nuevo->ant = anterior;
