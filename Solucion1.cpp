@@ -76,7 +76,7 @@ struct SolucionArreglo {
         capacidad = actualizacion;
     }
     void insertar(uchar* palabra) {
-        if (cantidad == capacidad) Actualizar();
+        if (cantidad >= capacidad) Actualizar();
 
         // copia heap
         int largo = 0;
@@ -141,6 +141,7 @@ struct SolucionArreglo {
 
     ~SolucionArreglo() {
         for(int i = 0; i < cantidad; i++) {
+            if (v[i] != nullptr)
             delete[] v[i];
         }
         delete[] v;
