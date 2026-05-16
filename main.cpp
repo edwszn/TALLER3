@@ -9,6 +9,7 @@
 #include <random>    // Para random_device
 #include <chrono>    // Para medir tiempos 
 #include "Solucion2.cpp" // para que lea el archivo solucion2
+#include "Solucion1.cpp" // para que lea el archivo solucion1
 
 using namespace std;
 using namespace std::chrono;
