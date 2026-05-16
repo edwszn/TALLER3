@@ -1,5 +1,3 @@
-
-// aqui comienza la solución 2
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,16 +7,19 @@
 #include <random>    // Para random_device
 #include <chrono>    // Para medir tiempos 
 #include "Solucion2.cpp" // para que lea el archivo solucion2
-#include "Solucion1.cpp" // para que lea el archivo solucion1
+#include "Solucion1.cpp"
 
 using namespace std;
 using namespace std::chrono;
 
 int main() {
-    int factorK = 512; // Este es el "salto", lo podemos cambiar a 8, 32, 128, 512 para comparar las velocidades
+    // MODIFICA ESTE VALOR (8, 32, 128, 512) PARA TUS DISTINTAS PRUEBAS
+    int factorK = 512; 
+    
     GrillaNiveles miGrilla(factorK);
+    SolucionArreglo miArreglo(10000, 0.1);
 
-    //PASO 1: CARGA DE D1
+
     ifstream archivoD1("D1.txt");
     string linea;
     if (!archivoD1.is_open()) {
@@ -26,22 +27,26 @@ int main() {
         return 1;
     }
 
-    cout << "PASO 1: Cargando D1 en memoria" << endl;
+    cout << "PASO 1: Cargando D1 en memoria (Factor K asignado: " << factorK << ")..." << endl;
     while (archivoD1 >> linea) {
-        // Limpieza básica por si el archivo viene de Windows/Linux mezclado
         if (!linea.empty() && (linea.back() == '\r' || linea.back() == '\n')) linea.pop_back();
         
-        uchar* palabraPtr = new uchar[linea.length() + 1];
-        strcpy((char*)palabraPtr, linea.c_str());
-        miGrilla.insertarNivelBase(palabraPtr);
+        // Carga para Grilla (Solución 2)
+        uchar* palabraPtrS2 = new uchar[linea.length() + 1];
+        strcpy((char*)palabraPtrS2, linea.c_str());
+        miGrilla.insertarNivelBase(palabraPtrS2);
+
+        // Carga para Arreglo (Solución 1)
+        uchar* palabraPtrS1 = new uchar[linea.length() + 1];
+        strcpy((char*)palabraPtrS1, linea.c_str());
+        miArreglo.insertar(palabraPtrS1);
     }
     archivoD1.close();
 
-    // CONSTRUCCIÓN DE LA ESTRUCTURA
-    cout << "PASO 2: Construyendo niveles superiores..." << endl;
+    // CONSTRUCCIÓN DE LA ESTRUCTURA SUPERIOR (Solo Grilla utiliza factorK interno)
+    cout << "PASO 2: Construyendo niveles superiores de la Grilla usando K = " << factorK << "..." << endl;
     miGrilla.construirNivelesSuperiores();
 
-    //PREPARACIÓN DE D2 (para que sean aleatorios) 
     ifstream archivoD2("D2.txt");
     vector<string> palabrasD2;
     if (!archivoD2.is_open()) {
@@ -50,7 +55,6 @@ int main() {
     }
     
     while (archivoD2 >> linea) {
-        // Limpieza para los caracteres invisibles
         if (!linea.empty() && (linea.back() == '\r' || linea.back() == '\n')) linea.pop_back();
         if (!linea.empty()) palabrasD2.push_back(linea);
     }
@@ -60,57 +64,82 @@ int main() {
     mt19937 g(rd());
     shuffle(palabrasD2.begin(), palabrasD2.end(), g);
 
-    // EXPERIMENTOS 
-    cout << "Iniciando experimentos aleatorios con " << palabrasD2.size() << " palabras..." << endl;
 
-    int encontradas = 0;
-    int insertadas = 0;
-    int eliminadas = 0;
+    cout << "\nEjecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
+    int insertadasS2 = 0, eliminadasS2 = 0, encontradasS2 = 0;
 
-    // Inicia el cronometro para tomar los tiempos
-    auto inicioTotal = high_resolution_clock::now();
-
+    auto inicioS2 = high_resolution_clock::now();
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
         const char* p = palabrasD2[i].c_str();
 
         if (i < 5000) {
-            // EXPERIMENTO A: Buscar e Insertar si no existe
             if (!miGrilla.buscar(p)) {
                 uchar* nueva = new uchar[strlen(p) + 1];
                 strcpy((char*)nueva, p);
                 miGrilla.insertarOrdenado(nueva);
-                insertadas++;
+                insertadasS2++;
             } else {
-                encontradas++;
+                encontradasS2++;
             }
         } else {
-            // EXPERIMENTO B: Buscar y Eliminar si existe
             if (miGrilla.buscar(p)) {
                 miGrilla.eliminar(p);
-                eliminadas++;
+                eliminadasS2++;
             }
         }
-
-        // Pequeño indicador de progreso, para que no se vea la terminal tan pegada
-        if (i % 2500 == 0 && i > 0) cout << "...procesadas " << i << " palabras" << endl;
     }
+    auto finS2 = high_resolution_clock::now();
+    duration<double, milli> tiempoS2 = finS2 - inicioS2;
 
-    auto finTotal = high_resolution_clock::now();
-    duration<double, milli> tiempo = finTotal - inicioTotal;
 
-    // RESULTADOS
-    cout << "RESULTADOS ETAPA 1 - SOLUCION 2" << endl;
-    cout << "============================================" << endl;
-    cout << "Factor k:             " << factorK << endl;
-    cout << "Tiempo de ejecucion:  " << tiempo.count() << " ms" << endl;
-    cout << "Palabras insertadas:  " << insertadas << endl;
-    cout << "Palabras eliminadas:  " << eliminadas << endl;
-    cout << "Total procesadas D2:  " << palabrasD2.size() << endl;
-    cout << "============================================" << endl;
+    cout << "Ejecutando Experimento con Solucion 1 (Arreglo)..." << endl;
+    int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
+
+    auto inicioS1 = high_resolution_clock::now();
+    for (int i = 0; i < (int)palabrasD2.size(); i++) {
+        const char* p = palabrasD2[i].c_str();
+        uchar* pUchar = (uchar*)p; 
+
+        if (i < 5000) {
+            if (!miArreglo.buscar(pUchar)) {
+                uchar* nueva = new uchar[strlen(p) + 1];
+                strcpy((char*)nueva, p);
+                miArreglo.insertar(nueva);
+                insertadasS1++;
+            } else {
+                encontradasS1++;
+            }
+        } else {
+            if (miArreglo.buscar(pUchar)) {
+                miArreglo.eliminar(pUchar);
+                eliminadasS1++;
+            }
+        }
+    }
+    auto finS1 = high_resolution_clock::now();
+    duration<double, milli> tiempoS1 = finS1 - inicioS1;
+
+    cout << "\n=============================================" << endl;
+    cout << "   RESULTADOS FINALES COMPARATIVOS (K = " << factorK << ")" << endl;
+    cout << "=============================================" << endl;
+    cout << "Factor K analizado en Grilla: " << factorK << endl;
+    cout << "Total palabras evaluadas D2:  " << palabrasD2.size() << endl;
+    cout << "---------------------------------------------" << endl;
+    cout << "SOLUCION 1 (Arreglo + Indice ASCII):" << endl;
+    cout << "  Tiempo de ejecucion: " << tiempoS1.count() << " ms" << endl;
+    cout << "  Palabras insertadas: " << insertadasS1 << endl;
+    cout << "  Palabras eliminadas: " << eliminadasS1 << endl;
+    cout << "  *Nota: Esta estructura es independiente de K" << endl;
+    cout << "---------------------------------------------" << endl;
+    cout << "SOLUCION 2 (Grilla de Niveles con K=" << factorK << "):" << endl;
+    cout << "  Tiempo de ejecucion: " << tiempoS2.count() << " ms" << endl;
+    cout << "  Palabras insertadas: " << insertadasS2 << endl;
+    cout << "  Palabras eliminadas: " << eliminadasS2 << endl;
+    cout << "=============================================" << endl;
 
     cout << "Verificando consistencia..." << endl;
-    if (!miGrilla.buscar("palabra_que_no_existe_seguro")) {
-    cout << "Confirmado: La busqueda arroja negativo para claves inexistentes." << endl;
-}
+    if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro")) {
+        cout << "Confirmado: Ambas estructuras finalizaron de forma consistente." << endl;
+    }
     return 0;
 }
