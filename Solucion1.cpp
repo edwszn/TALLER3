@@ -1,5 +1,3 @@
- //Aqui va el areglo dinamico
-
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -10,37 +8,10 @@ using namespace std;
 
 struct SolucionArreglo {
     uchar** v; // vector que contiene las palabras
-    int capacidad; // Tamaño total
-    int cantidad; // Cuántas palabras hay guardadas
+    int capacidad; // tamaño total
+    int cantidad; // cuántas palabras hay guardadas
     int ascii[256]; // codigo ascii, para cada letra
     float overhead = 0.1; // 10% de espacio extra
-
-    void eliminar(uchar* palabra) {
-        // Localizar la posicion de la palabra
-        int posicion = -1;
-        for(int j = 0; j < cantidad; j++) {
-            if(comparar(v[j], palabra) == 0) {
-                posicion = j;
-                break;
-            }
-        }
-
-        // Si la palabra existe, procedemo a borrar
-        if(posicion != -1) {
-            // LIBERACIÓN DE MEMORIA: Muy importante para la nota
-            delete[] v[posicion]; 
-
-            // DESPLAZAMIENTO (Cerrar el hueco)
-            // Movemos todos los punteros desde la derecha hacia la izquierda
-            for(int j = posicion; j < cantidad - 1; j++) {
-                v[j] = v[j + 1];
-            }
-
-            // Actualizar contadores y el mapa de búsqueda
-            cantidad--;
-            actualizaracsii(); 
-        }
-    }
 
     // Constructor inicial
     SolucionArreglo(int cap_inicial, float FOverhead) {
@@ -49,13 +20,16 @@ struct SolucionArreglo {
         capacidad = cap_inicial;
         v = new uchar*[capacidad];
 
+        for(int i= 0; i< capacidad; i++) {
+            v[i] = nullptr;
+        }
         for(int i=0; i<256; i++) {
             ascii[i]=-1;
         }
     }
     int comparar(uchar* p1, uchar* p2) {
         int i = 0;
-        while (p1[i] != '\0' && p2[i] != '\0') { //aquí se comparan lexicograficamnete
+        while (p1[i] != '\0' && p2[i] != '\0') { //aquí se comparan
             if (p1[i] < p2[i]) return -1;
             if (p1[i] > p2[i]) return 1;
             i++;
@@ -69,13 +43,17 @@ struct SolucionArreglo {
         uchar** nuevo_v = new uchar*[actualizacion];
 
         for(int i = 0; i < cantidad; i++) {
-            nuevo_v[i] = v[i]; // copiar punteros
+            nuevo_v[i] = v[i];
+        }
+        for(int i = cantidad; i < actualizacion; i++) {
+            nuevo_v[i] = nullptr;
         }
         delete[] v; // elimina arreglo
         v = nuevo_v;
         capacidad = actualizacion;
     }
     void insertar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0') return;
         if (cantidad >= capacidad) Actualizar();
 
         // copia heap
@@ -99,9 +77,38 @@ struct SolucionArreglo {
         v[posicionicion] = copia;
         cantidad++;
 
-        actualizaracsii();
+        actualizarascii();
     }
-    void actualizaracsii() {
+
+    void eliminar(uchar* palabra) {
+        // localiza la posicion de la palabra
+        if (palabra == nullptr || palabra[0] == '\0') return;
+
+        int posicion = -1;
+        for(int j = 0; j < cantidad; j++) {
+            if(comparar(v[j], palabra) == 0) {
+                posicion = j;
+                break;
+            }
+        }
+
+        // si la palabra existe, se borra
+        if(posicion != -1) {
+            // liberación de memoria
+            delete[] v[posicion]; 
+
+            // dasplazamiento
+            for(int j = posicion; j < cantidad - 1; j++) {
+                v[j] = v[j + 1];
+            }
+            v[cantidad - 1] = nullptr;
+
+            cantidad--;
+            actualizarascii(); 
+        }
+    }
+    
+    void actualizarascii() {
         for(int i = 0; i < 256; i++) {
             ascii[i] = -1;
         }
@@ -113,6 +120,7 @@ struct SolucionArreglo {
         }
     }
     bool buscar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0') return false;
         uchar inicial = palabra[0];
         int inicio = ascii[inicial];
 
@@ -140,10 +148,13 @@ struct SolucionArreglo {
     // Destructor
 
     ~SolucionArreglo() {
-        for(int i = 0; i < cantidad; i++) {
-            if (v[i] != nullptr)
-            delete[] v[i];
+        if (v != nullptr){
+            for(int i = 0; i < cantidad; i++) {
+                if (v[i] != nullptr){
+                    delete[] v[i];
+                }
+            }
+            delete[] v;
         }
-        delete[] v;
     }
 };
