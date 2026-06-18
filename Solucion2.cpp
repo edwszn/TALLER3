@@ -28,6 +28,20 @@ private:
     int k;
     int capacidadCabezas; // Para manejar el arreglo de niveles
 
+    //Funcion auxiliar para el método eliminar
+    void desconectarHorizontal(Nodo* nodo) {
+        if (nodo->ant != nullptr) nodo->ant->sig = nodo->sig;
+        if (nodo->sig != nullptr) nodo->sig->ant = nodo->ant;
+        for (int i = 0; i < numNiveles; i++) {
+            if (cabezas[i] == nodo) cabezas[i] = nodo->sig;
+        }
+    }
+
+    void repararVertical(Nodo* nodo) {
+        if (nodo->abajo != nullptr) nodo->abajo->arriba = nullptr;
+        if (nodo->arriba != nullptr) nodo->arriba->abajo = nullptr;
+    }
+
 public:
     GrillaNiveles(int factorK) {
         k = factorK;
@@ -122,62 +136,29 @@ bool buscar(const char* palabraBuscada) {
         delete[] cabezas;
     }
 
-    //M. de Eliminar.
+    //M. de Eliminar
     void eliminar(const char* palabraAEliminar) {
-    //Buscar el nodo en el nivel base (L1)
+    //Buscar en nivel base
     Nodo* aux = cabezas[0];
-    while (aux != nullptr) {
-        if (std::strcmp((char*)aux->clave, palabraAEliminar) == 0) break;
+    while (aux != nullptr && std::strcmp((char*)aux->clave, palabraAEliminar) != 0) {
         aux = aux->sig;
     }
 
-    // Si no existe en el nivel base, no hay nada que borrar
-    if (aux == nullptr) return;
+    if (aux == nullptr) return; // No se encontró
 
-    // Buscar la palabra que reemplazará la etiqueta arriba
-    // Es la palabra que viene inmediatamente después en el nivel base
-    const char* reemplazo = (aux->sig != nullptr) ? (char*)aux->sig->clave : nullptr;
-
-    // Subir por la columna de ese nodo hacia arriba
+    //Recorrer la columna hacia arriba y eliminar
     Nodo* actual = aux;
-    int nivel = 0;
-
-    while (actual != nullptr && nivel < numNiveles) {
-        // Guardamos el puntero al nodo de arriba antes de cualquier cambio
-        Nodo* nodoArriba = actual->arriba;
-
-        if (std::strcmp((char*)actual->clave, palabraAEliminar) == 0) {
-            if (reemplazo != nullptr) {
-                // CASO A: Hay una palabra siguiente, así que solo actualizamos la "etiqueta"
-                // Esto mantiene la estructura de la grilla intacta 
-                actual->clave = (uchar*)reemplazo;
-            } else {
-                // CASO B: No hay reemplazo (era la última palabra), hay que desconectar el nodo
-                if (actual->ant != nullptr) actual->ant->sig = actual->sig;
-                if (actual->sig != nullptr) actual->sig->ant = actual->ant;
-                if (actual == cabezas[nivel]) cabezas[nivel] = actual->sig;
-
-                // Solo borramos físicamente si NO es el nivel base (el base se borra al final)
-                if (nivel > 0) {
-                    // Antes de borrar, desconectar de abajo para no dejar punteros colgados
-                    if (actual->abajo != nullptr) actual->abajo->arriba = nullptr;
-                    delete actual;
-                }
-            }
-        }
+    while (actual != nullptr) {
+        Nodo* siguienteNivel = actual->arriba; // Guardamos el de arriba antes de borrar
         
-        actual = nodoArriba; // Subimos al siguiente piso
-        nivel++;
+        desconectarHorizontal(actual);
+        repararVertical(actual);
+        
+        delete actual; // Borrado seguro
+        actual = siguienteNivel; // Subimos
     }
-
-    // Borrado físico del nodo en el nivel base (L1)
-    if (aux->ant != nullptr) aux->ant->sig = aux->sig;
-    if (aux->sig != nullptr) aux->sig->ant = aux->ant;
-    if (aux == cabezas[0]) cabezas[0] = aux->sig;
-    if (aux == ultimoBase) ultimoBase = aux->ant;
-
-    delete aux;
 }
+
 void insertarOrdenado(uchar* palabra) {
     // Buscamos la posición en el nivel base (L1)
     Nodo* aux = cabezas[0];
