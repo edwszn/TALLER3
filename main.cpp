@@ -8,6 +8,7 @@
 #include <chrono>    // Para medir tiempos 
 #include "Solucion2.cpp" // para que lea el archivo solucion2
 #include "Solucion1.cpp" // para que lea el archivo solucion1
+#include "Solucion3.cpp" //Para que lea el archivo solucion 3
 
 using namespace std;
 using namespace std::chrono;
@@ -141,5 +142,15 @@ int main() {
     if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro")) {
         cout << "Confirmado: Ambas estructuras finalizaron de forma consistente." << endl;
     }
+    
+///COMPROBAR SI CORRE LA SOLUCION 3
+  
+    ArbolK arbol(512);
+    cout << "====================================================================" << endl;
+    cout << "SOLUCION 3 COMPILA CORRECTAMENTE" << endl;
+
+
+//
+    
     return 0;
 }
