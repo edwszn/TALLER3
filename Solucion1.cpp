@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <cstring>
 
 typedef unsigned char uchar;
 
@@ -70,8 +71,10 @@ struct SolucionArreglo {
         while (posicionicion < cantidad && comparar(v[posicionicion], copia) < 0) {
             posicionicion++;
         }
-        for ( int i = cantidad; i > posicionicion; i--) {
-            v[i] = v[i-1];
+        // memmove es una función estándar en C++ para mover bloques de memoria de forma masiva y extremadamente eficiente
+        if (cantidad > posicionicion) {
+         memmove(&v[posicionicion + 1], &v[posicionicion], (cantidad - posicionicion) * sizeof(uchar*));
+        
         }
 
         v[posicionicion] = copia;
@@ -97,9 +100,9 @@ struct SolucionArreglo {
             // liberación de memoria
             delete[] v[posicion]; 
 
-            // dasplazamiento
-            for(int j = posicion; j < cantidad - 1; j++) {
-                v[j] = v[j + 1];
+            // dasplazamiento con memmove
+            if (posicion < cantidad - 1) {
+             memmove(&v[posicion], &v[posicion + 1], (cantidad - 1 - posicion) * sizeof(uchar*));
             }
             v[cantidad - 1] = nullptr;
 
