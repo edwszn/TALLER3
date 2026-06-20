@@ -1,8 +1,14 @@
-all:
-	g++ codigo_fuente/main.cpp codigo_fuente/dynamic_array.cpp -o programa
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
-run:
-	./programa
+TARGET = programa
+SRC = main.cpp
+
+all:
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+
+run: all
+	./$(TARGET)
 
 clean:
-	rm -f programa
+	rm -f $(TARGET)
