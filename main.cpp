@@ -8,7 +8,9 @@
 #include <chrono>    // Para medir tiempos 
 #include "Solucion2.cpp" // para que lea el archivo solucion2
 #include "Solucion1.cpp" // para que lea el archivo solucion1
-#include "Solucion3.cpp" //Para que lea el archivo solucion 3
+#include "Solucion3.cpp" //Para que lea el archivo solucion3
+
+typedef unsigned char uchar;
 
 using namespace std;
 using namespace std::chrono;
@@ -19,6 +21,7 @@ int main() {
     
     GrillaNiveles miGrilla(factorK);
     SolucionArreglo miArreglo(10000, 0.1);
+    ArbolK miArbolK(factorK);
 
 
     ifstream archivoD1("D1.txt");
@@ -41,6 +44,9 @@ int main() {
         uchar* palabraPtrS1 = new uchar[linea.length() + 1];
         strcpy((char*)palabraPtrS1, linea.c_str());
         miArreglo.insertar(palabraPtrS1);
+
+        // Carga para ArbolK (Solución 3)
+        miArbolK.insertar((uchar*)linea.c_str());
     }
     archivoD1.close();
 
@@ -120,6 +126,30 @@ int main() {
     auto finS1 = high_resolution_clock::now();
     duration<double, milli> tiempoS1 = finS1 - inicioS1;
 
+    cout << "Ejecutando Experimento con Solucion 3 (ArbolK, K=" << factorK << ")..." << endl;
+    int insertadasS3 = 0, eliminadasS3 = 0, encontradasS3 = 0;
+
+    auto inicioS3 = high_resolution_clock::now();
+    for (int i = 0; i < (int)palabrasD2.size(); i++) {
+        uchar* pUchar = (uchar*)palabrasD2[i].c_str();
+
+        if (i < 5000) {
+            if (!miArbolK.buscar(pUchar)) {
+                miArbolK.insertar(pUchar);
+                insertadasS3++;
+            } else {
+                encontradasS3++;
+            }
+        } else {
+            if (miArbolK.buscar(pUchar)) {
+                miArbolK.eliminar(pUchar);
+                eliminadasS3++;
+            }
+        }
+    }
+    auto finS3 = high_resolution_clock::now();
+    duration<double, milli> tiempoS3 = finS3 - inicioS3;
+
     cout << "\n=============================================" << endl;
     cout << "   RESULTADOS FINALES COMPARATIVOS (K = " << factorK << ")" << endl;
     cout << "=============================================" << endl;
@@ -136,21 +166,19 @@ int main() {
     cout << "  Tiempo de ejecucion: " << tiempoS2.count() << " ms" << endl;
     cout << "  Palabras insertadas: " << insertadasS2 << endl;
     cout << "  Palabras eliminadas: " << eliminadasS2 << endl;
+    cout << "---------------------------------------------" << endl;
+    cout << "SOLUCION 3 (ArbolK con K=" << factorK << "):" << endl;
+    cout << "  Tiempo de ejecucion: " << tiempoS3.count() << " ms" << endl;
+    cout << "  Palabras insertadas: " << insertadasS3 << endl;
+    cout << "  Palabras eliminadas: " << eliminadasS3 << endl;
+    cout << "  Memoria RAM ocupada: " << miArbolK.calcularMemNodo() << " bytes" << endl;
     cout << "=============================================" << endl;
 
     cout << "Verificando consistencia..." << endl;
-    if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro")) {
+    if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro") &&!miArbolK.buscar((uchar*)"palabra_que_no_existe_seguro")) {
         cout << "Confirmado: Ambas estructuras finalizaron de forma consistente." << endl;
     }
     
-///COMPROBAR SI CORRE LA SOLUCION 3
-  
-    ArbolK arbol(512);
-    cout << "====================================================================" << endl;
-    cout << "SOLUCION 3 COMPILA CORRECTAMENTE" << endl;
-
-
-//
-    
     return 0;
 }
+
