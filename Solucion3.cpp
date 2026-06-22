@@ -210,11 +210,58 @@ public:
     }
 
 
-    bool eliminar(uchar* palabra){
-        if (raiz == nullptr){
+    bool eliminarRecursivo(NodoK*& nodo, uchar* palabra){
+      if (nodo == nullptr) {
             return false;
         }
-        return false; 
+
+        int pos = buscarPosNodo(nodo, palabra);
+
+        // Caso 1: la palabra esta en este nodo
+        if (pos != -1) {
+
+            // Caso 1A: si es hoja, se borra directamente
+            if (esHoja(nodo)) {
+                borrarPalabraDeNodo(nodo, pos);
+                cantidadPalabras--;
+
+                // Si el nodo quedo vacio, se elimina el nodo completo
+                if (nodo->cantidad == 0) {
+                    delete[] nodo->palabras;
+                    delete[] nodo->hijos;
+                    delete nodo;
+                    nodo = nullptr;
+                }
+                return true;
+            }
+
+            // Caso 1B: si tiene hijo derecho, reemplazamos por el sucesor
+            if (nodo->hijos[pos + 1] != nullptr) {
+                uchar* sucesor = obtenerMinimo(nodo->hijos[pos + 1]);
+
+                liberarEspacio(nodo->palabras[pos]);
+                nodo->palabras[pos] = guardarPalabra(sucesor);
+
+                return eliminarRecursivo(nodo->hijos[pos + 1], sucesor);
+            }
+
+            // Caso 1C: si no tiene hijo derecho, usamos el predecesor del hijo izquierdo
+            if (nodo->hijos[pos] != nullptr) {
+                uchar* predecesor = obtenerMaximo(nodo->hijos[pos]);
+
+                liberarEspacio(nodo->palabras[pos]);
+                nodo->palabras[pos] = guardarPalabra(predecesor);
+
+                return eliminarRecursivo(nodo->hijos[pos], predecesor);
+            }
+
+            // Caso raro: no es hoja, pero no tiene hijos alrededor de esa clave.
+            // Hay que mover los hijos tambien para no dejar un subarbol inaccesible.
+            borrarPalabraYReacomodarHijos(nodo, pos);
+            cantidadPalabras--;
+            return true;
+        }
+
 }
     
     int obtCantidPalabras() { return cantidadPalabras; }

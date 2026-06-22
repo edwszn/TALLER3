@@ -67,12 +67,8 @@ int main() {
     }
     archivoD2.close();
 
-    random_device rd;
-    mt19937 g(rd());
-    shuffle(palabrasD2.begin(), palabrasD2.end(), g);
-
-
-    cout << "\nEjecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
+    cout << cout << cout << "===============================================";
+    cout << "Ejecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
     int insertadasS2 = 0, eliminadasS2 = 0, encontradasS2 = 0;
 
     auto inicioS2 = high_resolution_clock::now();
@@ -98,34 +94,35 @@ int main() {
     auto finS2 = high_resolution_clock::now();
     duration<double, milli> tiempoS2 = finS2 - inicioS2;
 
-
+    cout << cout << cout << "===============================================";
     cout << "Ejecutando Experimento con Solucion 1 (Arreglo)..." << endl;
     int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
 
-    auto inicioS1 = high_resolution_clock::now();
+    bool seInsertaS3 = true;
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        const char* p = palabrasD2[i].c_str();
-        uchar* pUchar = (uchar*)p; 
-
-        if (i < 5000) {
-            if (!miArreglo.buscar(pUchar)) {
-                uchar* nueva = new uchar[strlen(p) + 1];
-                strcpy((char*)nueva, p);
-                miArreglo.insertar(nueva);
-                insertadasS1++;
+        uchar* pUchar = (uchar*)palabrasD2[i].c_str(); //NO olvidar que es un puntero al primer caracter de la palabra
+        if (seInsertaS3) {
+            if (!miArbolK.buscar(pUchar)) {
+                miArbolK.insertar(pUchar);
+                insertadasS3++;
             } else {
-                encontradasS1++;
+                encontradasS3++;
             }
         } else {
-            if (miArreglo.buscar(pUchar)) {
-                miArreglo.eliminar(pUchar);
-                eliminadasS1++;
+            if (miArbolK.buscar(pUchar)) {
+                if (miArbolK.eliminar(pUchar)) {
+                    eliminadasS3++;
+                }
+                }
             }
         }
-    }
+
+    seInsertaS3 = !seInsertaS3; //Esto es para intercambiar entre insercion y eliminacion para todas las palabras
+}
     auto finS1 = high_resolution_clock::now();
     duration<double, milli> tiempoS1 = finS1 - inicioS1;
 
+    cout << cout << cout << "==============================================="
     cout << "Ejecutando Experimento con Solucion 3 (ArbolK, K=" << factorK << ")..." << endl;
     int insertadasS3 = 0, eliminadasS3 = 0, encontradasS3 = 0;
 
