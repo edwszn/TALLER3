@@ -1,3 +1,37 @@
+/*
+Tarea INFO088 - Etapa 2
+Integrantes:
+- Afra Rodríguez
+- Eduardo Pezo
+- Matías Montecinos
+
+Descripción:
+Este programa compara tres estructuras de datos dinámicas para búsqueda de claves:
+1) Solución 1: Arreglo dinámico ordenado con índice ASCII.
+2) Solución 2: Grilla de niveles usando factor K.
+3) Solución 3: Árbol de búsqueda K-ario.
+
+El programa carga las palabras del archivo D1.txt para construir las estructuras
+y luego utiliza D2.txt para realizar operaciones intercaladas de inserción y eliminación.
+También mide tiempos de construcción, búsqueda, inserción, eliminación y memoria usada.
+
+Compilación:
+    make
+
+Ejecución:
+    ./programa K
+
+Si no se entrega un valor K, se usa K = 8 por defecto.
+
+Archivos necesarios:
+    D1.txt
+    D2.txt
+    Solucion1.cpp
+    Solucion2.cpp
+    Solucion3.cpp
+    Makefile
+*/
+
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -5,7 +39,7 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
-#include <random>
+#include <ctime>
 #include <chrono>
 #include "Solucion2.cpp"
 #include "Solucion1.cpp"
@@ -17,10 +51,19 @@ using namespace std;
 using namespace std::chrono;
 
 int main(int argc, char* argv[]) {
+
+    //definciones
+
+    const int REP = 10000;
+
     int factorK = 8;
     vector<string> palabrasD1;
     vector<string> palabrasD2;
     string linea;
+
+    int encontradasREP_S1 = 0;
+    int encontradasREP_S2 = 0;
+    int encontradasREP_S3 = 0;
 
     if (argc >= 2) {
         factorK = atoi(argv[1]);
@@ -32,6 +75,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    //==========================Aqui lee y rellena el vector con palabras D1
+    cout << "PASO 1: Leyendo D1 en memoria..." << endl;
+
     ifstream archivoD1("D1.txt");
 
     if (!archivoD1.is_open()) {
@@ -39,7 +85,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    cout << "PASO 1: Leyendo D1 en memoria..." << endl;
 
     while (archivoD1 >> linea) {
         if (!linea.empty() && (linea.back() == '\r' || linea.back() == '\n')) {
@@ -52,7 +97,9 @@ int main(int argc, char* argv[]) {
     }
 
     archivoD1.close();
-
+    
+  //==========================Aqui rellena el vector con palabras D2
+    cout << "PASO 2: Leyendo D2 en memoria..." << endl;
     ifstream archivoD2("D2.txt");
 
     if (!archivoD2.is_open()) {
@@ -74,8 +121,11 @@ int main(int argc, char* argv[]) {
 
     archivoD2.close();
 
+    //========================Aqui comienza a construir las estructuras
+
     cout << "PASO 3: Construyendo estructuras con K = " << factorK << "..." << endl;
 
+    //SOLUCION 1
     auto inicioConstruccionS1 = high_resolution_clock::now();
     SolucionArreglo miArreglo(10000, 0.1);
 
@@ -83,7 +133,10 @@ int main(int argc, char* argv[]) {
         miArreglo.insertar((uchar*)palabrasD1[i].c_str());
     }
 
-    auto finConstruccionS1 = high_resolution_clock::now();
+
+
+    //Solucion 2
+    auto finConstruccionS1 = high_resolution_clock::now(); 
     duration<double, milli> tiempoConstruccionS1 = finConstruccionS1 - inicioConstruccionS1;
 
     auto inicioConstruccionS2 = high_resolution_clock::now();
@@ -100,6 +153,9 @@ int main(int argc, char* argv[]) {
     auto finConstruccionS2 = high_resolution_clock::now();
     duration<double, milli> tiempoConstruccionS2 = finConstruccionS2 - inicioConstruccionS2;
 
+
+
+    //Solucion 3
     auto inicioConstruccionS3 = high_resolution_clock::now();
     ArbolK miArbolK(factorK);
 
@@ -115,10 +171,17 @@ int main(int argc, char* argv[]) {
     cout << "Solucion 2: " << tiempoConstruccionS2.count() << " ms" << endl;
     cout << "Solucion 3: " << tiempoConstruccionS3.count() << " ms" << endl;
 
-    const int REP = 10000;
+    //Aqui genera palabras aleatorias
+    srand(time(0));
+
     vector<string> clavesBusqueda = palabrasD1;
-    mt19937 generador(12345);
-    shuffle(clavesBusqueda.begin(), clavesBusqueda.end(), generador);
+
+    if (!clavesBusqueda.empty()) {
+        for (int i = (int)clavesBusqueda.size() - 1; i > 0; i--) {
+            int j = rand() % (i + 1);
+            swap(clavesBusqueda[i], clavesBusqueda[j]);
+        }
+    }
 
     if ((int)clavesBusqueda.size() > REP) {
         clavesBusqueda.resize(REP);
@@ -128,6 +191,8 @@ int main(int argc, char* argv[]) {
     int encontradasREP_S2 = 0;
     int encontradasREP_S3 = 0;
 
+    //==================================================BUSQUEDAS CON REP===========================================================================
+    //SOLUCION 1
     auto inicioBusquedaS1 = high_resolution_clock::now();
 
     for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
@@ -138,6 +203,8 @@ int main(int argc, char* argv[]) {
 
     auto finBusquedaS1 = high_resolution_clock::now();
     duration<double, micro> tiempoBusquedaS1 = finBusquedaS1 - inicioBusquedaS1;
+
+    //SOLUCION 2
 
     auto inicioBusquedaS2 = high_resolution_clock::now();
 
@@ -150,6 +217,8 @@ int main(int argc, char* argv[]) {
     auto finBusquedaS2 = high_resolution_clock::now();
     duration<double, micro> tiempoBusquedaS2 = finBusquedaS2 - inicioBusquedaS2;
 
+    //SOLUCION 3
+
     auto inicioBusquedaS3 = high_resolution_clock::now();
 
     for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
@@ -160,6 +229,8 @@ int main(int argc, char* argv[]) {
 
     auto finBusquedaS3 = high_resolution_clock::now();
     duration<double, micro> tiempoBusquedaS3 = finBusquedaS3 - inicioBusquedaS3;
+
+
 
     double promedioBusquedaS1 = tiempoBusquedaS1.count() / clavesBusqueda.size();
     double promedioBusquedaS2 = tiempoBusquedaS2.count() / clavesBusqueda.size();
@@ -185,6 +256,11 @@ int main(int argc, char* argv[]) {
     cout << "  Tiempo total busqueda: " << tiempoBusquedaS3.count() << " microsegundos" << endl;
     cout << "  Tiempo promedio busqueda: " << promedioBusquedaS3 << " microsegundos" << endl;
     cout << "=============================================" << endl;
+
+
+    //============================================== TIEMPOS MODIFICACION DINAMICOS ================================
+    // ELIMINACION INSERTADO 
+
 
     cout << "\nEjecutando Experimento con Solucion 1 (Arreglo)..." << endl;
     int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
