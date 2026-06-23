@@ -187,10 +187,6 @@ int main(int argc, char* argv[]) {
         clavesBusqueda.resize(REP);
     }
 
-    int encontradasREP_S1 = 0;
-    int encontradasREP_S2 = 0;
-    int encontradasREP_S3 = 0;
-
     //==================================================BUSQUEDAS CON REP===========================================================================
     //SOLUCION 1
     auto inicioBusquedaS1 = high_resolution_clock::now();
