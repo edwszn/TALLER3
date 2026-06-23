@@ -34,6 +34,7 @@ using namespace std;
 using namespace std::chrono;
 int main(int argc, char* argv[]) {
     int factorK = 8; // valor por defecto si no se entrega K por terminal
+    vector<string> palabrasD1; //
 
     if (argc >= 2) {
         factorK = atoi(argv[1]);
@@ -46,8 +47,7 @@ int main(int argc, char* argv[]) {
     }
 
     ifstream archivoD1("D1.txt");
-    vector<string> palabrasD1;
-    vector<string> palabrasD2;
+        vector<string> palabrasD2;
     string linea;
 
     if (!archivoD1.is_open()) {
@@ -114,6 +114,8 @@ int main(int argc, char* argv[]) {
 
     miGrilla.construirNivelesSuperiores();
 
+    //
+
     auto finConstruccionS2 = high_resolution_clock::now();
     duration<double, milli> tiempoConstruccionS2 = finConstruccionS2 - inicioConstruccionS2;
 
@@ -134,6 +136,98 @@ int main(int argc, char* argv[]) {
     cout << "Solucion 1: " << tiempoConstruccionS1.count() << " ms" << endl;
     cout << "Solucion 2: " << tiempoConstruccionS2.count() << " ms" << endl;
     cout << "Solucion 3: " << tiempoConstruccionS3.count() << " ms" << endl;
+
+
+//=========================================================================================================
+//EXPERIMENTO BUSQUEDAS REP CON CLAVES DE D1
+
+    const int REP = 10000;
+    vector<string> clavesBusqueda = palabrasD1;
+
+    mt19937 generador(12345);
+    shuffle(clavesBusqueda.begin(), clavesBusqueda.end(), generador);
+
+    if ((int)clavesBusqueda.size() > REP) {
+        clavesBusqueda.resize(REP);
+    }
+
+    int encontradasREP_S1 = 0;
+    int encontradasREP_S2 = 0;
+    int encontradasREP_S3 = 0;
+
+    auto inicioBusquedaS1 = high_resolution_clock::now();
+
+    for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
+        uchar* palabra = (uchar*)clavesBusqueda[i].c_str();
+
+        if (miArreglo.buscar(palabra)) {
+            encontradasREP_S1++;
+        }
+    }
+
+    auto finBusquedaS1 = high_resolution_clock::now();
+    duration<double, micro> tiempoBusquedaS1 = finBusquedaS1 - inicioBusquedaS1;
+
+
+    auto inicioBusquedaS2 = high_resolution_clock::now();
+
+    for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
+        const char* palabra = clavesBusqueda[i].c_str();
+
+        if (miGrilla.buscar(palabra)) {
+            encontradasREP_S2++;
+        }
+    }
+
+    auto finBusquedaS2 = high_resolution_clock::now();
+    duration<double, micro> tiempoBusquedaS2 = finBusquedaS2 - inicioBusquedaS2;
+
+
+    auto inicioBusquedaS3 = high_resolution_clock::now();
+
+    for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
+        uchar* palabra = (uchar*)clavesBusqueda[i].c_str();
+
+        if (miArbolK.buscar(palabra)) {
+            encontradasREP_S3++;
+        }
+    }
+
+    auto finBusquedaS3 = high_resolution_clock::now();
+    duration<double, micro> tiempoBusquedaS3 = finBusquedaS3 - inicioBusquedaS3;
+
+    double promedioBusquedaS1 = tiempoBusquedaS1.count() / clavesBusqueda.size();
+    double promedioBusquedaS2 = tiempoBusquedaS2.count() / clavesBusqueda.size();
+    double promedioBusquedaS3 = tiempoBusquedaS3.count() / clavesBusqueda.size();
+
+    cout << "\n=============================================" << endl;
+    cout << "EXPERIMENTO BUSQUEDAS REP CON CLAVES DE D1" << endl;
+    cout << "=============================================" << endl;
+    cout << "REP usado: " << clavesBusqueda.size() << endl;
+    cout << "---------------------------------------------" << endl;
+
+    cout << "SOLUCION 1 (Arreglo + Indice ASCII):" << endl;
+    cout << "  Encontradas: " << encontradasREP_S1 << " / " << clavesBusqueda.size() << endl;
+    cout << "  Tiempo total busqueda: " << tiempoBusquedaS1.count() << " microsegundos" << endl;
+    cout << "  Tiempo promedio busqueda: " << promedioBusquedaS1 << " microsegundos" << endl;
+
+    cout << "---------------------------------------------" << endl;
+
+    cout << "SOLUCION 2 (Grilla de Niveles con K=" << factorK << "):" << endl;
+    cout << "  Encontradas: " << encontradasREP_S2 << " / " << clavesBusqueda.size() << endl;
+    cout << "  Tiempo total busqueda: " << tiempoBusquedaS2.count() << " microsegundos" << endl;
+    cout << "  Tiempo promedio busqueda: " << promedioBusquedaS2 << " microsegundos" << endl;
+
+    cout << "---------------------------------------------" << endl;
+
+    cout << "SOLUCION 3 (ArbolK con K=" << factorK << "):" << endl;
+    cout << "  Encontradas: " << encontradasREP_S3 << " / " << clavesBusqueda.size() << endl;
+    cout << "  Tiempo total busqueda: " << tiempoBusquedaS3.count() << " microsegundos" << endl;
+    cout << "  Tiempo promedio busqueda: " << promedioBusquedaS3 << " microsegundos" << endl;
+
+    cout << "=============================================" << endl;
+
+//=========================================================================================================
 
 
     cout << "\nEjecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
