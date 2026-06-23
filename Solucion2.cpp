@@ -22,12 +22,6 @@ Operaciones principales:
 
 typedef unsigned char uchar;
 
-/*
-Nodo usado en la grilla.
-Cada nodo puede estar conectado horizontalmente con sig/ant
-y verticalmente con arriba/abajo.
-Solo los nodos de la base son dueños reales de la clave.
-*/
 struct Nodo {
     uchar* clave;
     Nodo* sig;
@@ -36,12 +30,9 @@ struct Nodo {
     Nodo* arriba;
     bool duenoClave;
 
-    /*Este constructor crea un nodo de la grilla,
-    le asigna una palabra, conecta opcionalmente hacia abajo, deja
-    los otros punteros vacíos y marca si el nodo es dueño de la memoria de la clave.
+    // Constructor del nodo: guarda la clave, enlaza hacia abajo si corresponde
+    // e indica si este nodo debe liberar la memoria de la palabra.
     Nodo(uchar* c, Nodo* abajoPtr = nullptr, bool dueno = false) {
-    */
-   
         clave = c;
         sig = nullptr;
         ant = nullptr;

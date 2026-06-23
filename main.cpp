@@ -65,6 +65,16 @@ int main(int argc, char* argv[]) {
     int encontradasREP_S2 = 0;
     int encontradasREP_S3 = 0;
 
+    double tiempoInsercionS1 = 0.0;
+    double tiempoEliminacionS1 = 0.0;
+    double tiempoInsercionS2 = 0.0;
+    double tiempoEliminacionS2 = 0.0;
+    double tiempoInsercionS3 = 0.0;
+    double tiempoEliminacionS3 = 0.0;
+
+    int insertadasS1 = 0;
+    int eliminadasS1 = 0;
+
     if (argc >= 2) {
         factorK = atoi(argv[1]);
     }
@@ -259,81 +269,103 @@ int main(int argc, char* argv[]) {
 
 
     cout << "\nEjecutando Experimento con Solucion 1 (Arreglo)..." << endl;
-    int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
-    auto inicioS1 = high_resolution_clock::now();
-    bool tocaInsertarS1 = true;
 
+    auto inicioS1 = chrono::high_resolution_clock::now();
+    
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        uchar* p = (uchar*)palabrasD2[i].c_str();
+        string palabra = palabrasD2[i];
 
-        if (tocaInsertarS1) {
-            if (miArreglo.insertar(p)) {
+        if (i % 2 == 0) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miArreglo.insertar((uchar*)palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
+
+            tiempoInsercionS1 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 insertadasS1++;
-            } else {
-                encontradasS1++;
             }
         } else {
-            if (miArreglo.eliminar(p)) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miArreglo.eliminar((uchar*)palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
+
+            tiempoEliminacionS1 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 eliminadasS1++;
             }
         }
-
-        tocaInsertarS1 = !tocaInsertarS1;
     }
 
     auto finS1 = high_resolution_clock::now();
     duration<double, milli> tiempoS1 = finS1 - inicioS1;
 
     cout << "Ejecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
-    int insertadasS2 = 0, eliminadasS2 = 0, encontradasS2 = 0;
+    int insertadasS2 = 0;
+    int eliminadasS2 = 0;
+
     auto inicioS2 = high_resolution_clock::now();
-    bool tocaInsertarS2 = true;
 
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        const char* p = palabrasD2[i].c_str();
+        string palabra = palabrasD2[i];
 
-        if (tocaInsertarS2) {
-            uchar* nueva = new uchar[strlen(p) + 1];
-            strcpy((char*)nueva, p);
+        if (i % 2 == 0) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miGrilla.insertarOrdenado(palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
 
-            if (miGrilla.insertarOrdenado(nueva)) {
+            tiempoInsercionS2 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 insertadasS2++;
-            } else {
-                encontradasS2++;
             }
         } else {
-            if (miGrilla.eliminar(p)) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miGrilla.eliminar(palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
+
+            tiempoEliminacionS2 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 eliminadasS2++;
             }
         }
-
-        tocaInsertarS2 = !tocaInsertarS2;
     }
+
 
     auto finS2 = high_resolution_clock::now();
     duration<double, milli> tiempoS2 = finS2 - inicioS2;
 
     cout << "Ejecutando Experimento con Solucion 3 (ArbolK, K=" << factorK << ")..." << endl;
-    int insertadasS3 = 0, eliminadasS3 = 0, encontradasS3 = 0;
+    int insertadasS3 = 0;
+    int eliminadasS3 = 0;
     auto inicioS3 = high_resolution_clock::now();
-    bool tocaInsertarS3 = true;
 
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        uchar* p = (uchar*)palabrasD2[i].c_str();
+        string palabra = palabrasD2[i];
 
-        if (tocaInsertarS3) {
-            if (miArbolK.insertar(p)) {
+        if (i % 2 == 0) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miArbolK.insertar((uchar*)palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
+
+            tiempoInsercionS3 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 insertadasS3++;
-            } else {
-                encontradasS3++;
             }
         } else {
-            if (miArbolK.eliminar(p)) {
+            auto inicio = chrono::high_resolution_clock::now();
+            bool ok = miArbolK.eliminar((uchar*)palabra.c_str());
+            auto fin = chrono::high_resolution_clock::now();
+
+            tiempoEliminacionS3 += chrono::duration<double, milli>(fin - inicio).count();
+
+            if (ok) {
                 eliminadasS3++;
             }
         }
-
-        tocaInsertarS3 = !tocaInsertarS3;
     }
 
     auto finS3 = high_resolution_clock::now();
@@ -344,24 +376,33 @@ int main(int argc, char* argv[]) {
     cout << "=============================================" << endl;
     cout << "Factor K analizado: " << factorK << endl;
     cout << "Total palabras evaluadas D2:  " << palabrasD2.size() << endl;
+
     cout << "---------------------------------------------" << endl;
     cout << "SOLUCION 1 (Arreglo + Indice ASCII):" << endl;
     cout << "  Tiempo de construccion: " << tiempoConstruccionS1.count() << " ms" << endl;
-    cout << "  Tiempo de ejecucion D2: " << tiempoS1.count() << " ms" << endl;
+    cout << "  Tiempo total insercion: " << tiempoInsercionS1 << " ms" << endl;
+    cout << "  Tiempo total eliminacion: " << tiempoEliminacionS1 << " ms" << endl;
+    cout << "  Tiempo de ejecucion D2: " << tiempoInsercionS1 + tiempoEliminacionS1 << " ms" << endl;
     cout << "  Palabras insertadas: " << insertadasS1 << endl;
     cout << "  Palabras eliminadas: " << eliminadasS1 << endl;
     cout << "  Memoria utilizada: " << miArreglo.memoria() << " bytes" << endl;
+
     cout << "---------------------------------------------" << endl;
     cout << "SOLUCION 2 (Grilla de Niveles con K=" << factorK << "):" << endl;
     cout << "  Tiempo de construccion: " << tiempoConstruccionS2.count() << " ms" << endl;
-    cout << "  Tiempo de ejecucion D2: " << tiempoS2.count() << " ms" << endl;
+    cout << "  Tiempo total insercion: " << tiempoInsercionS2 << " ms" << endl;
+    cout << "  Tiempo total eliminacion: " << tiempoEliminacionS2 << " ms" << endl;
+    cout << "  Tiempo de ejecucion D2: " << tiempoInsercionS2 + tiempoEliminacionS2 << " ms" << endl;
     cout << "  Palabras insertadas: " << insertadasS2 << endl;
     cout << "  Palabras eliminadas: " << eliminadasS2 << endl;
     cout << "  Memoria utilizada: " << miGrilla.memoriaUsada() << " bytes" << endl;
+
     cout << "---------------------------------------------" << endl;
     cout << "SOLUCION 3 (ArbolK con K=" << factorK << "):" << endl;
     cout << "  Tiempo de construccion: " << tiempoConstruccionS3.count() << " ms" << endl;
-    cout << "  Tiempo de ejecucion D2: " << tiempoS3.count() << " ms" << endl;
+    cout << "  Tiempo total insercion: " << tiempoInsercionS3 << " ms" << endl;
+    cout << "  Tiempo total eliminacion: " << tiempoEliminacionS3 << " ms" << endl;
+    cout << "  Tiempo de ejecucion D2: " << tiempoInsercionS3 + tiempoEliminacionS3 << " ms" << endl;
     cout << "  Palabras insertadas: " << insertadasS3 << endl;
     cout << "  Palabras eliminadas: " << eliminadasS3 << endl;
     cout << "  Memoria utilizada: " << miArbolK.calcularMemNodo() << " bytes" << endl;
