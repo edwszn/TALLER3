@@ -28,6 +28,59 @@ struct SolucionArreglo {
             ascii[i]=-1;
         }
     }
+    
+    bool eliminar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0') return false;
+
+        uchar inicial = palabra[0];
+        int inicio = ascii[inicial];
+
+        if (inicio == -1) return false;
+
+        int fin = cantidad - 1;
+
+        for (int i = inicial + 1; i < 256; i++) {
+            if (ascii[i] != -1) {
+                fin = ascii[i] - 1;
+                break;
+            }
+        }
+
+        int izquierda = inicio;
+        int derecha = fin;
+        int posicion = -1;
+
+        while (izquierda <= derecha) {
+            int medio = izquierda + (derecha - izquierda) / 2;
+            int comp = comparar(v[medio], palabra);
+
+            if (comp == 0) {
+                posicion = medio;
+                break;
+            }
+
+            if (comp < 0) {
+                izquierda = medio + 1;
+            } else {
+                derecha = medio - 1;
+            }
+        }
+
+        if (posicion == -1) return false;
+
+        delete[] v[posicion];
+
+        if (posicion < cantidad - 1) {
+            memmove(&v[posicion], &v[posicion + 1], (cantidad - posicion - 1) * sizeof(uchar*));
+        }
+
+        cantidad--;
+        v[cantidad] = nullptr;
+
+        actualizarascii();
+
+        return true;
+    }
     int comparar(uchar* p1, uchar* p2) {
         int i = 0;
         while (p1[i] != '\0' && p2[i] != '\0') { //aquí se comparan
@@ -53,64 +106,49 @@ struct SolucionArreglo {
         v = nuevo_v;
         capacidad = actualizacion;
     }
-    void insertar(uchar* palabra) {
-        if (palabra == nullptr || palabra[0] == '\0') return;
-        if (cantidad >= capacidad) Actualizar();
 
-        // copia heap
+    bool insertar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0') return false;
+
+        int izquierda = 0;
+        int derecha = cantidad - 1;
+        int posicion = cantidad;
+
+        while (izquierda <= derecha) {
+            int medio = izquierda + (derecha - izquierda) / 2;
+            int comp = comparar(v[medio], palabra);
+
+            if (comp == 0) {
+                return false;
+            }
+
+            if (comp < 0) {
+                izquierda = medio + 1;
+            } else {
+                posicion = medio;
+                derecha = medio - 1;
+            }
+        }
+
+        if (cantidad >= capacidad) {
+            Actualizar();
+        }
         int largo = 0;
-        while(palabra[largo] != '\0') {
+        while (palabra[largo] != '\0') {
             largo++;
         }
         uchar* copia = new uchar[largo + 1];
-        for( int i = 0; i <= largo; i++) {
+        for (int i = 0; i <= largo; i++) {
             copia[i] = palabra[i];
         }
-
-        int posicionicion = 0;
-        while (posicionicion < cantidad && comparar(v[posicionicion], copia) < 0) {
-            posicionicion++;
+        if (cantidad > posicion) {
+            memmove(&v[posicion + 1], &v[posicion], (cantidad - posicion) * sizeof(uchar*));
         }
-        // memmove es una función estándar en C++ para mover bloques de memoria de forma masiva y extremadamente eficiente
-        if (cantidad > posicionicion) {
-         memmove(&v[posicionicion + 1], &v[posicionicion], (cantidad - posicionicion) * sizeof(uchar*));
-        
-        }
-
-        v[posicionicion] = copia;
+        v[posicion] = copia;
         cantidad++;
-
         actualizarascii();
+        return true;
     }
-
-    void eliminar(uchar* palabra) {
-        // localiza la posicion de la palabra
-        if (palabra == nullptr || palabra[0] == '\0') return;
-
-        int posicion = -1;
-        for(int j = 0; j < cantidad; j++) {
-            if(comparar(v[j], palabra) == 0) {
-                posicion = j;
-                break;
-            }
-        }
-
-        // si la palabra existe, se borra
-        if(posicion != -1) {
-            // liberación de memoria
-            delete[] v[posicion]; 
-
-            // dasplazamiento con memmove
-            if (posicion < cantidad - 1) {
-             memmove(&v[posicion], &v[posicion + 1], (cantidad - 1 - posicion) * sizeof(uchar*));
-            }
-            v[cantidad - 1] = nullptr;
-
-            cantidad--;
-            actualizarascii(); 
-        }
-    }
-    
     void actualizarascii() {
         for(int i = 0; i < 256; i++) {
             ascii[i] = -1;
@@ -146,6 +184,24 @@ struct SolucionArreglo {
             else fin = medio - 1;
         }
         return false;
+    }
+
+    long memoria() {
+        long total = 0;
+
+        total += sizeof(SolucionArreglo);
+        total += capacidad * sizeof(uchar*);
+
+        for (int i = 0; i < cantidad; i++) {
+            int largo = 0;
+            while (v[i][largo] != '\0') {
+                largo++;
+            }
+
+            total += (largo + 1) * sizeof(uchar);
+        }
+
+        return total;
     }
 
     // Destructor

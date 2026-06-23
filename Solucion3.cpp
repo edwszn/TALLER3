@@ -134,6 +134,130 @@ private:
         }
         return i;
     }
+
+
+    bool esHoja(NodoK* nodo){ // Revisa si el nodo no tiene hijos
+        if (nodo == nullptr) return true;
+        for (int i = 0; i <= K; i++) {
+            if (nodo->hijos[i] != nullptr) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    uchar* obtenerMinimo(NodoK* nodo){ // Busca la palabra mas pequena dentro de un subarbol
+        if (nodo == nullptr) return nullptr;
+
+        NodoK* actual = nodo;
+        while (actual->hijos[0] != nullptr) {
+            actual = actual->hijos[0];
+        }
+        return actual->palabras[0];
+    }
+
+    uchar* obtenerMaximo(NodoK* nodo){ 
+        if (nodo == nullptr) return nullptr;
+
+        NodoK* actual = nodo;
+
+        while (actual->hijos[actual->cantidad] != nullptr) {
+            actual = actual->hijos[actual->cantidad];
+        }
+
+        return actual->palabras[actual->cantidad - 1];
+    }
+
+    void borrarPalabraDeNodo(NodoK* nodo, int pos){ // Borra una palabra de un nodo y corre las demas a la izquierda
+        if (nodo == nullptr || pos < 0 || pos >= nodo->cantidad) return;
+
+        liberarEspacio(nodo->palabras[pos]);
+
+        for (int i = pos; i < nodo->cantidad - 1; i++) {
+            nodo->palabras[i] = nodo->palabras[i + 1];
+        }
+
+        nodo->palabras[nodo->cantidad - 1] = nullptr;
+        nodo->cantidad--;
+    }
+
+
+    void borrarPalabraYReacomodarHijos(NodoK* nodo, int pos){
+        // Se usa cuando borramos una clave de un nodo interno.
+        // Ademas de correr palabras, corre los hijos de la derecha para no perder subarboles.
+        if (nodo == nullptr || pos < 0 || pos >= nodo->cantidad) return;
+
+        liberarEspacio(nodo->palabras[pos]);
+
+        for (int i = pos; i < nodo->cantidad - 1; i++) {
+            nodo->palabras[i] = nodo->palabras[i + 1];
+        }
+        nodo->palabras[nodo->cantidad - 1] = nullptr;
+
+        for (int i = pos + 1; i < K; i++) {
+            nodo->hijos[i] = nodo->hijos[i + 1];
+        }
+        nodo->hijos[K] = nullptr;
+
+        nodo->cantidad--;
+    }
+
+    bool eliminarRecursivo(NodoK*& nodo, uchar* palabra){
+        if (nodo == nullptr) {
+            return false;
+        }
+
+        int pos = buscarPosNodo(nodo, palabra);
+
+        // Caso 1: la palabra esta en este nodo
+        if (pos != -1) {
+
+            // Caso 1A: si es hoja, se borra directamente
+            if (esHoja(nodo)) {
+                borrarPalabraDeNodo(nodo, pos);
+                cantidadPalabras--;
+
+                // Si el nodo quedo vacio, se elimina el nodo completo
+                if (nodo->cantidad == 0) {
+                    delete[] nodo->palabras;
+                    delete[] nodo->hijos;
+                    delete nodo;
+                    nodo = nullptr;
+                }
+                return true;
+            }
+
+            // Caso 1B: si tiene hijo derecho, reemplazamos por el sucesor
+            if (nodo->hijos[pos + 1] != nullptr) {
+                uchar* sucesor = obtenerMinimo(nodo->hijos[pos + 1]);
+
+                liberarEspacio(nodo->palabras[pos]);
+                nodo->palabras[pos] = guardarPalabra(sucesor);
+
+                return eliminarRecursivo(nodo->hijos[pos + 1], sucesor);
+            }
+
+            // Caso 1C: si no tiene hijo derecho, usamos el predecesor del hijo izquierdo
+            if (nodo->hijos[pos] != nullptr) {
+                uchar* predecesor = obtenerMaximo(nodo->hijos[pos]);
+
+                liberarEspacio(nodo->palabras[pos]);
+                nodo->palabras[pos] = guardarPalabra(predecesor);
+
+                return eliminarRecursivo(nodo->hijos[pos], predecesor);
+            }
+
+            // Caso raro: no es hoja, pero no tiene hijos alrededor de esa clave.
+            // Hay que mover los hijos tambien para no dejar un subarbol inaccesible.
+            borrarPalabraYReacomodarHijos(nodo, pos);
+            cantidadPalabras--;
+            return true;
+        }
+
+        // Caso 2: la palabra no esta en este nodo, bajamos por el hijo correcto
+        int hijo = hijoDondeBajar(nodo, palabra);
+        return eliminarRecursivo(nodo->hijos[hijo], palabra);
+    }
       
 public: 
     // constructor y destructor
@@ -210,59 +334,12 @@ public:
     }
 
 
-    bool eliminarRecursivo(NodoK*& nodo, uchar* palabra){
-      if (nodo == nullptr) {
+    bool eliminar(uchar* palabra){
+        if (raiz == nullptr){
             return false;
         }
-
-        int pos = buscarPosNodo(nodo, palabra);
-
-        // Caso 1: la palabra esta en este nodo
-        if (pos != -1) {
-
-            // Caso 1A: si es hoja, se borra directamente
-            if (esHoja(nodo)) {
-                borrarPalabraDeNodo(nodo, pos);
-                cantidadPalabras--;
-
-                // Si el nodo quedo vacio, se elimina el nodo completo
-                if (nodo->cantidad == 0) {
-                    delete[] nodo->palabras;
-                    delete[] nodo->hijos;
-                    delete nodo;
-                    nodo = nullptr;
-                }
-                return true;
-            }
-
-            // Caso 1B: si tiene hijo derecho, reemplazamos por el sucesor
-            if (nodo->hijos[pos + 1] != nullptr) {
-                uchar* sucesor = obtenerMinimo(nodo->hijos[pos + 1]);
-
-                liberarEspacio(nodo->palabras[pos]);
-                nodo->palabras[pos] = guardarPalabra(sucesor);
-
-                return eliminarRecursivo(nodo->hijos[pos + 1], sucesor);
-            }
-
-            // Caso 1C: si no tiene hijo derecho, usamos el predecesor del hijo izquierdo
-            if (nodo->hijos[pos] != nullptr) {
-                uchar* predecesor = obtenerMaximo(nodo->hijos[pos]);
-
-                liberarEspacio(nodo->palabras[pos]);
-                nodo->palabras[pos] = guardarPalabra(predecesor);
-
-                return eliminarRecursivo(nodo->hijos[pos], predecesor);
-            }
-
-            // Caso raro: no es hoja, pero no tiene hijos alrededor de esa clave.
-            // Hay que mover los hijos tambien para no dejar un subarbol inaccesible.
-            borrarPalabraYReacomodarHijos(nodo, pos);
-            cantidadPalabras--;
-            return true;
-        }
-
-}
+        return eliminarRecursivo(raiz, palabra);
+    }
     
     int obtCantidPalabras() { return cantidadPalabras; }
     int mostrarK() { return K; }

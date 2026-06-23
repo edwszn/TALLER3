@@ -29,19 +29,124 @@ private:
     int capacidadCabezas; // Para manejar el arreglo de niveles
 
     //Funcion auxiliar para el método eliminar
+    Nodo* buscarNodoBase(const char* palabraBuscada) {
+        if (cabezas[0] == nullptr || palabraBuscada == nullptr) {
+            return nullptr;
+        }
+
+        int nivelActual = numNiveles - 1;
+
+        while (nivelActual > 0 && cabezas[nivelActual] == nullptr) {
+            nivelActual--;
+        }
+
+        Nodo* aux = cabezas[nivelActual];
+
+        while (nivelActual >= 0 && aux != nullptr) {
+            while (aux->sig != nullptr && std::strcmp((char*)aux->sig->clave, palabraBuscada) <= 0) {
+                aux = aux->sig;
+            }
+
+            if (nivelActual == 0) {
+                if (std::strcmp((char*)aux->clave, palabraBuscada) == 0) {
+                    return aux;
+                }
+                return nullptr;
+            }
+
+            aux = aux->abajo;
+            nivelActual--;
+        }
+
+        return nullptr;
+    }
     void desconectarHorizontal(Nodo* nodo) {
-        if (nodo->ant != nullptr) nodo->ant->sig = nodo->sig;
-        if (nodo->sig != nullptr) nodo->sig->ant = nodo->ant;
+        if (nodo->ant != nullptr) {
+            nodo->ant->sig = nodo->sig;
+        }
+
+        if (nodo->sig != nullptr) {
+            nodo->sig->ant = nodo->ant;
+        }
+
         for (int i = 0; i < numNiveles; i++) {
-            if (cabezas[i] == nodo) cabezas[i] = nodo->sig;
+            if (cabezas[i] == nodo) {
+                cabezas[i] = nodo->sig;
+            }
+        }
+        if (ultimoBase == nodo) {
+            ultimoBase = nodo->ant;
         }
     }
+    void limpiarNivelesSuperiores() {
+        for (int i = 1; i < numNiveles; i++) {
+            Nodo* aux = cabezas[i];
 
-    void repararVertical(Nodo* nodo) {
-        if (nodo->abajo != nullptr) nodo->abajo->arriba = nullptr;
-        if (nodo->arriba != nullptr) nodo->arriba->abajo = nullptr;
+            while (aux != nullptr) {
+                Nodo* siguiente = aux->sig;
+                delete aux;
+                aux = siguiente;
+            }
+
+            cabezas[i] = nullptr;
+        }
+
+        Nodo* base = cabezas[0];
+
+        while (base != nullptr) {
+            base->arriba = nullptr;
+            base = base->sig;
+        }
+
+        numNiveles = 1;
     }
+    void eliminarNodo(Nodo* nodo) {
+        if (nodo == nullptr) return;
 
+        Nodo* nodoArriba = nodo->arriba;
+
+        if (nodoArriba != nullptr) {
+            Nodo* limiteBloque = nullptr;
+
+            if (nodoArriba->sig != nullptr) {
+                limiteBloque = nodoArriba->sig->abajo;
+            }
+
+            Nodo* reemplazo = nodo->sig;
+
+            if (reemplazo != nullptr && reemplazo != limiteBloque) {
+                nodoArriba->clave = reemplazo->clave;
+                nodoArriba->abajo = reemplazo;
+                reemplazo->arriba = nodoArriba;
+                nodo->arriba = nullptr;
+
+                Nodo* superior = nodoArriba->arriba;
+
+                while (superior != nullptr) {
+                    superior->clave = nodoArriba->clave;
+                    superior = superior->arriba;
+                }
+            } else {
+                eliminarNodo(nodoArriba);
+            }
+        }
+
+        desconectarHorizontal(nodo);
+
+        if (nodo->abajo != nullptr && nodo->abajo->arriba == nodo) {
+            nodo->abajo->arriba = nullptr;
+        }
+
+        if (nodo->arriba != nullptr && nodo->arriba->abajo == nodo) {
+            nodo->arriba->abajo = nullptr;
+        }
+
+        delete nodo;
+
+        while (numNiveles > 1 && cabezas[numNiveles - 1] == nullptr) {
+            numNiveles--;
+        }
+    }
 public:
     GrillaNiveles(int factorK) {
         k = factorK;
@@ -56,21 +161,39 @@ public:
     }
 
     void insertarNivelBase(uchar* palabra) {
+        Nodo* aux = cabezas[0];
+        Nodo* anterior = nullptr;
+
+        while (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) < 0) {
+            anterior = aux;
+            aux = aux->sig;
+        }
+
+        if (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) == 0) {
+            return;
+        }
+
         Nodo* nuevo = new Nodo(palabra);
-        
-        if (cabezas[0] == nullptr) {
+
+        nuevo->sig = aux;
+        nuevo->ant = anterior;
+
+        if (anterior == nullptr) {
             cabezas[0] = nuevo;
-            ultimoBase = nuevo;
         } else {
-            // Usamos ultimoBase en lugar de recorrer toda la lista
-            ultimoBase->sig = nuevo;
-            nuevo->ant = ultimoBase;
+            anterior->sig = nuevo;
+        }
+
+        if (aux != nullptr) {
+            aux->ant = nuevo;
+        } else {
             ultimoBase = nuevo;
         }
     }
     void construirNivelesSuperiores() {
     int nivelActual = 0;
     while (nivelActual < capacidadCabezas - 1) {
+        cabezas[nivelActual + 1] = nullptr;
         Nodo* viajero = cabezas[nivelActual];
         Nodo* anteriorArriba = nullptr;
         int contador = 0;
@@ -95,35 +218,30 @@ public:
         }
 
         numNiveles++;
-        if (nodosEnNivelSuperior <= 1) break; // Si solo queda 1 nodo, terminamos
+        if (nodosEnNivelSuperior <= k) break; // si es menor a k
         nivelActual++;
     }
 }
-bool buscar(const char* palabraBuscada) {
-    if (cabezas[0] == nullptr) return false;
-
-    int nivelActual = numNiveles - 1;
-    // Empezar desde el primer nivel que realmente tenga un nodo
-    while (nivelActual > 0 && cabezas[nivelActual] == nullptr) nivelActual--;
-    
-    Nodo* aux = cabezas[nivelActual];
-
-    while (nivelActual >= 0) {
-        // Avanzar a la derecha
-        while (aux->sig != nullptr && std::strcmp((char*)aux->sig->clave, palabraBuscada) <= 0) {
-            aux = aux->sig;
-        }
-
-        if (std::strcmp((char*)aux->clave, palabraBuscada) == 0) return true;
-
-        if (nivelActual > 0) {
-            aux = aux->abajo;
-            if (aux == nullptr) return false; // por Seguridad
-        }
-        nivelActual--;
+    bool buscar(const char* palabraBuscada) {
+        return buscarNodoBase(palabraBuscada) != nullptr;
     }
-    return false;
-}
+    long memoriaUsada() {
+        long total = 0;
+
+        total += sizeof(GrillaNiveles);
+        total += capacidadCabezas * sizeof(Nodo*);
+
+        for (int i = 0; i < numNiveles; i++) {
+            Nodo* aux = cabezas[i];
+
+            while (aux != nullptr) {
+                total += sizeof(Nodo);
+                aux = aux->sig;
+            }
+        }
+
+        return total;
+    }
     ~GrillaNiveles() {
         for (int i = 0; i < numNiveles; i++) {
             Nodo* aux = cabezas[i];
@@ -136,58 +254,50 @@ bool buscar(const char* palabraBuscada) {
         delete[] cabezas;
     }
 
-    //M. de Eliminar
-    void eliminar(const char* palabraAEliminar) {
-    //Buscar en nivel base
-    Nodo* aux = cabezas[0];
-    while (aux != nullptr && std::strcmp((char*)aux->clave, palabraAEliminar) != 0) {
-        aux = aux->sig;
+    bool eliminar(const char* palabraAEliminar) {
+        Nodo* nodo = buscarNodoBase(palabraAEliminar);
+
+        if (nodo == nullptr) {
+            return false;
+        }
+
+        eliminarNodo(nodo);
+        return true;
     }
+    bool insertarOrdenado(uchar* palabra) {
+            Nodo* aux = cabezas[0];
+            Nodo* anterior = nullptr;
 
-    if (aux == nullptr) return; // No se encontró
+            while (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) < 0) {
+                anterior = aux;
+                aux = aux->sig;
+            }
 
-    //Recorrer la columna hacia arriba y eliminar
-    Nodo* actual = aux;
-    while (actual != nullptr) {
-        Nodo* siguienteNivel = actual->arriba; // Guardamos el de arriba antes de borrar
-        
-        desconectarHorizontal(actual);
-        repararVertical(actual);
-        
-        delete actual; // Borrado seguro
-        actual = siguienteNivel; // Subimos
-    }
-}
+            if (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) == 0) {
+                return false;
+            }
 
-void insertarOrdenado(uchar* palabra) {
-    // Buscamos la posición en el nivel base (L1)
-    Nodo* aux = cabezas[0];
-    Nodo* anterior = nullptr;
+            Nodo* nuevo = new Nodo(palabra);
 
-    // Avanzamos mientras la palabra actual sea menor a la que queremos insertar
-    while (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) < 0) {
-        anterior = aux;
-        aux = aux->sig;
-    }
+            nuevo->sig = aux;
+            nuevo->ant = anterior;
 
-    // Si la palabra ya existe, no hacemos nada 
-    if (aux != nullptr && std::strcmp((char*)aux->clave, (char*)palabra) == 0) return;
+            if (anterior == nullptr) {
+                cabezas[0] = nuevo;
+            } else {
+                anterior->sig = nuevo;
+            }
 
-    //Insertar el nuevo nodo en la lista doblemente enlazada
-    Nodo* nuevo = new Nodo(palabra);
-    nuevo->sig = aux;
-    nuevo->ant = anterior;
+            if (aux != nullptr) {
+                aux->ant = nuevo;
+            } else {
+                ultimoBase = nuevo;
+            }
 
-    if (anterior == nullptr) {
-        cabezas[0] = nuevo; // Nueva cabeza si es la menor de todas
-    } else {
-        anterior->sig = nuevo;
-    }
+            limpiarNivelesSuperiores();
+            construirNivelesSuperiores();
 
-    if (aux != nullptr) {
-        aux->ant = nuevo;
-    } else {
-        ultimoBase = nuevo; // Actualizamos el último si insertamos al final
-    }
-}
+            return true;
+        }
+
 };
