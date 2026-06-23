@@ -186,6 +186,8 @@ struct SolucionArreglo {
         return false;
     }
 
+    //medir memoria utilizada
+
     long memoria() {
         long total = 0;
 

@@ -1,10 +1,33 @@
-#ifndef SOLUCION2_CPP
+/*Solución 2: Grilla de Niveles
+
+Esta estructura almacena las palabras en una lista base doblemente enlazada,
+ordenada lexicográficamente. Sobre esta lista se construyen niveles superiores
+con saltos cada K nodos, parecida a una skip list determinística.
+
+La lista base es la única dueña de las palabras almacenadas en memoria.
+Los niveles superiores solo apuntan a palabras ya existentes, por lo que no
+deben liberar esas claves para evitar errores de memoria.
+
+Operaciones principales:
+- insertarNivelBase: inserta palabras al construir
+- construirNivelesSuperiores: ordena la base si es necesario y crea los niveles.
+- buscar: recorre desde el nivel superior hacia abajo para encontrar una clave.
+- insertarOrdenado: inserta manteniendo el orden de la base.
+- eliminar: elimina una palabra y actualiza los enlaces de la grilla.
+*/
+
 #define SOLUCION2_CPP
 
 #include <cstddef>
 
 typedef unsigned char uchar;
 
+/*
+Nodo usado en la grilla.
+Cada nodo puede estar conectado horizontalmente con sig/ant
+y verticalmente con arriba/abajo.
+Solo los nodos de la base son dueños reales de la clave.
+*/
 struct Nodo {
     uchar* clave;
     Nodo* sig;
@@ -13,7 +36,12 @@ struct Nodo {
     Nodo* arriba;
     bool duenoClave;
 
+    /*Este constructor crea un nodo de la grilla,
+    le asigna una palabra, conecta opcionalmente hacia abajo, deja
+    los otros punteros vacíos y marca si el nodo es dueño de la memoria de la clave.
     Nodo(uchar* c, Nodo* abajoPtr = nullptr, bool dueno = false) {
+    */
+   
         clave = c;
         sig = nullptr;
         ant = nullptr;
@@ -668,5 +696,3 @@ public:
         return numNiveles;
     }
 };
-
-#endif
