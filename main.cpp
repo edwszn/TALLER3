@@ -1,40 +1,26 @@
-/*
-Tarea INFO088 - Etapa 2
-Integrantes: Matias Montecinos, Afra Rodríguez, Eduardo Pezo
-
-Compilación:
-    make
-
-Ejecución:
-    ./programa k
-    SI NO SE AGREGA K, el valor por defecto sera 8
-
-El programa carga D1.txt, construye las tres estructuras,
-ejecuta operaciones con D2.txt y muestra tiempos/resultados.
-*/
-
-
-
-#include <cstdlib>   // Para usar atoi
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring>
 #include <vector>
-#include <algorithm> // Para shuffle
-#include <random>    // Para random_device
-#include <chrono>    // Para medir tiempos 
-#include "Solucion2.cpp" // para que lea el archivo solucion2
-#include "Solucion1.cpp" // para que lea el archivo solucion1
-#include "Solucion3.cpp" //Para que lea el archivo solucion3
+#include <algorithm>
+#include <random>
+#include <chrono>
+#include "Solucion2.cpp"
+#include "Solucion1.cpp"
+#include "Solucion3.cpp"
 
 typedef unsigned char uchar;
 
 using namespace std;
 using namespace std::chrono;
+
 int main(int argc, char* argv[]) {
-    int factorK = 8; // valor por defecto si no se entrega K por terminal
-    vector<string> palabrasD1; //
+    int factorK = 8;
+    vector<string> palabrasD1;
+    vector<string> palabrasD2;
+    string linea;
 
     if (argc >= 2) {
         factorK = atoi(argv[1]);
@@ -47,8 +33,6 @@ int main(int argc, char* argv[]) {
     }
 
     ifstream archivoD1("D1.txt");
-        vector<string> palabrasD2;
-    string linea;
 
     if (!archivoD1.is_open()) {
         cout << "Error: No se pudo abrir D1.txt" << endl;
@@ -92,18 +76,17 @@ int main(int argc, char* argv[]) {
 
     cout << "PASO 3: Construyendo estructuras con K = " << factorK << "..." << endl;
 
-    //CONSTRUCCION SOLUCION 1
     auto inicioConstruccionS1 = high_resolution_clock::now();
     SolucionArreglo miArreglo(10000, 0.1);
+
     for (int i = 0; i < (int)palabrasD1.size(); i++) {
         miArreglo.insertar((uchar*)palabrasD1[i].c_str());
     }
+
     auto finConstruccionS1 = high_resolution_clock::now();
     duration<double, milli> tiempoConstruccionS1 = finConstruccionS1 - inicioConstruccionS1;
 
-    // CONSTRUCCION SOLUCION 2
     auto inicioConstruccionS2 = high_resolution_clock::now();
-
     GrillaNiveles miGrilla(factorK);
 
     for (int i = 0; i < (int)palabrasD1.size(); i++) {
@@ -114,15 +97,10 @@ int main(int argc, char* argv[]) {
 
     miGrilla.construirNivelesSuperiores();
 
-    //
-
     auto finConstruccionS2 = high_resolution_clock::now();
     duration<double, milli> tiempoConstruccionS2 = finConstruccionS2 - inicioConstruccionS2;
 
-
-    // CONSTRUCCION SOLUCION 3
     auto inicioConstruccionS3 = high_resolution_clock::now();
-
     ArbolK miArbolK(factorK);
 
     for (int i = 0; i < (int)palabrasD1.size(); i++) {
@@ -137,13 +115,8 @@ int main(int argc, char* argv[]) {
     cout << "Solucion 2: " << tiempoConstruccionS2.count() << " ms" << endl;
     cout << "Solucion 3: " << tiempoConstruccionS3.count() << " ms" << endl;
 
-
-//=========================================================================================================
-//EXPERIMENTO BUSQUEDAS REP CON CLAVES DE D1
-
     const int REP = 10000;
     vector<string> clavesBusqueda = palabrasD1;
-
     mt19937 generador(12345);
     shuffle(clavesBusqueda.begin(), clavesBusqueda.end(), generador);
 
@@ -158,9 +131,7 @@ int main(int argc, char* argv[]) {
     auto inicioBusquedaS1 = high_resolution_clock::now();
 
     for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
-        uchar* palabra = (uchar*)clavesBusqueda[i].c_str();
-
-        if (miArreglo.buscar(palabra)) {
+        if (miArreglo.buscar((uchar*)clavesBusqueda[i].c_str())) {
             encontradasREP_S1++;
         }
     }
@@ -168,13 +139,10 @@ int main(int argc, char* argv[]) {
     auto finBusquedaS1 = high_resolution_clock::now();
     duration<double, micro> tiempoBusquedaS1 = finBusquedaS1 - inicioBusquedaS1;
 
-
     auto inicioBusquedaS2 = high_resolution_clock::now();
 
     for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
-        const char* palabra = clavesBusqueda[i].c_str();
-
-        if (miGrilla.buscar(palabra)) {
+        if (miGrilla.buscar(clavesBusqueda[i].c_str())) {
             encontradasREP_S2++;
         }
     }
@@ -182,13 +150,10 @@ int main(int argc, char* argv[]) {
     auto finBusquedaS2 = high_resolution_clock::now();
     duration<double, micro> tiempoBusquedaS2 = finBusquedaS2 - inicioBusquedaS2;
 
-
     auto inicioBusquedaS3 = high_resolution_clock::now();
 
     for (int i = 0; i < (int)clavesBusqueda.size(); i++) {
-        uchar* palabra = (uchar*)clavesBusqueda[i].c_str();
-
-        if (miArbolK.buscar(palabra)) {
+        if (miArbolK.buscar((uchar*)clavesBusqueda[i].c_str())) {
             encontradasREP_S3++;
         }
     }
@@ -205,34 +170,50 @@ int main(int argc, char* argv[]) {
     cout << "=============================================" << endl;
     cout << "REP usado: " << clavesBusqueda.size() << endl;
     cout << "---------------------------------------------" << endl;
-
     cout << "SOLUCION 1 (Arreglo + Indice ASCII):" << endl;
     cout << "  Encontradas: " << encontradasREP_S1 << " / " << clavesBusqueda.size() << endl;
     cout << "  Tiempo total busqueda: " << tiempoBusquedaS1.count() << " microsegundos" << endl;
     cout << "  Tiempo promedio busqueda: " << promedioBusquedaS1 << " microsegundos" << endl;
-
     cout << "---------------------------------------------" << endl;
-
     cout << "SOLUCION 2 (Grilla de Niveles con K=" << factorK << "):" << endl;
     cout << "  Encontradas: " << encontradasREP_S2 << " / " << clavesBusqueda.size() << endl;
     cout << "  Tiempo total busqueda: " << tiempoBusquedaS2.count() << " microsegundos" << endl;
     cout << "  Tiempo promedio busqueda: " << promedioBusquedaS2 << " microsegundos" << endl;
-
     cout << "---------------------------------------------" << endl;
-
     cout << "SOLUCION 3 (ArbolK con K=" << factorK << "):" << endl;
     cout << "  Encontradas: " << encontradasREP_S3 << " / " << clavesBusqueda.size() << endl;
     cout << "  Tiempo total busqueda: " << tiempoBusquedaS3.count() << " microsegundos" << endl;
     cout << "  Tiempo promedio busqueda: " << promedioBusquedaS3 << " microsegundos" << endl;
-
     cout << "=============================================" << endl;
 
-//=========================================================================================================
+    cout << "\nEjecutando Experimento con Solucion 1 (Arreglo)..." << endl;
+    int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
+    auto inicioS1 = high_resolution_clock::now();
+    bool tocaInsertarS1 = true;
 
+    for (int i = 0; i < (int)palabrasD2.size(); i++) {
+        uchar* p = (uchar*)palabrasD2[i].c_str();
 
-    cout << "\nEjecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
+        if (tocaInsertarS1) {
+            if (miArreglo.insertar(p)) {
+                insertadasS1++;
+            } else {
+                encontradasS1++;
+            }
+        } else {
+            if (miArreglo.eliminar(p)) {
+                eliminadasS1++;
+            }
+        }
+
+        tocaInsertarS1 = !tocaInsertarS1;
+    }
+
+    auto finS1 = high_resolution_clock::now();
+    duration<double, milli> tiempoS1 = finS1 - inicioS1;
+
+    cout << "Ejecutando Experimento con Solucion 2 (Grilla, K=" << factorK << ")..." << endl;
     int insertadasS2 = 0, eliminadasS2 = 0, encontradasS2 = 0;
-
     auto inicioS2 = high_resolution_clock::now();
     bool tocaInsertarS2 = true;
 
@@ -240,90 +221,56 @@ int main(int argc, char* argv[]) {
         const char* p = palabrasD2[i].c_str();
 
         if (tocaInsertarS2) {
-            if (!miGrilla.buscar(p)) {
-                uchar* nueva = new uchar[strlen(p) + 1];
-                strcpy((char*)nueva, p);
-                miGrilla.insertarOrdenado(nueva);
+            uchar* nueva = new uchar[strlen(p) + 1];
+            strcpy((char*)nueva, p);
+
+            if (miGrilla.insertarOrdenado(nueva)) {
                 insertadasS2++;
             } else {
                 encontradasS2++;
             }
         } else {
-            if (miGrilla.buscar(p)) {
+            if (miGrilla.eliminar(p)) {
                 eliminadasS2++;
             }
         }
 
         tocaInsertarS2 = !tocaInsertarS2;
     }
+
     auto finS2 = high_resolution_clock::now();
     duration<double, milli> tiempoS2 = finS2 - inicioS2;
 
-
-    cout << "Ejecutando Experimento con Solucion 1 (Arreglo)..." << endl;
-    int insertadasS1 = 0, eliminadasS1 = 0, encontradasS1 = 0;
-
-    auto inicioS1 = high_resolution_clock::now();
-    bool tocaInsertarS1 = true;
-
-    for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        const char* p = palabrasD2[i].c_str();
-        uchar* pUchar = (uchar*)p; 
-
-        if (tocaInsertarS1) {
-            if (!miArreglo.buscar(pUchar)) {
-                uchar* nueva = new uchar[strlen(p) + 1];
-                strcpy((char*)nueva, p);
-                miArreglo.insertar(nueva);
-                insertadasS1++;
-            } else {
-                encontradasS1++;
-            }
-        } else {
-            if (miArreglo.buscar(pUchar)) {
-                miArreglo.eliminar(pUchar);
-                eliminadasS1++;
-            }
-        }
-
-        tocaInsertarS1 = !tocaInsertarS1;
-    }
-    auto finS1 = high_resolution_clock::now();
-    duration<double, milli> tiempoS1 = finS1 - inicioS1;
-
     cout << "Ejecutando Experimento con Solucion 3 (ArbolK, K=" << factorK << ")..." << endl;
     int insertadasS3 = 0, eliminadasS3 = 0, encontradasS3 = 0;
-
     auto inicioS3 = high_resolution_clock::now();
     bool tocaInsertarS3 = true;
 
     for (int i = 0; i < (int)palabrasD2.size(); i++) {
-        uchar* pUchar = (uchar*)palabrasD2[i].c_str();
+        uchar* p = (uchar*)palabrasD2[i].c_str();
 
         if (tocaInsertarS3) {
-            if (!miArbolK.buscar(pUchar)) {
-                miArbolK.insertar(pUchar);
+            if (miArbolK.insertar(p)) {
                 insertadasS3++;
             } else {
                 encontradasS3++;
             }
         } else {
-            if (miArbolK.buscar(pUchar)) {
-                if (miArbolK.eliminar(pUchar)) {
-                    eliminadasS3++;
-                }
+            if (miArbolK.eliminar(p)) {
+                eliminadasS3++;
             }
         }
 
         tocaInsertarS3 = !tocaInsertarS3;
     }
+
     auto finS3 = high_resolution_clock::now();
     duration<double, milli> tiempoS3 = finS3 - inicioS3;
 
     cout << "\n=============================================" << endl;
     cout << "   RESULTADOS FINALES COMPARATIVOS (K = " << factorK << ")" << endl;
     cout << "=============================================" << endl;
-    cout << "Factor K analizado en Grilla: " << factorK << endl;
+    cout << "Factor K analizado: " << factorK << endl;
     cout << "Total palabras evaluadas D2:  " << palabrasD2.size() << endl;
     cout << "---------------------------------------------" << endl;
     cout << "SOLUCION 1 (Arreglo + Indice ASCII):" << endl;
@@ -345,14 +292,15 @@ int main(int argc, char* argv[]) {
     cout << "  Tiempo de ejecucion D2: " << tiempoS3.count() << " ms" << endl;
     cout << "  Palabras insertadas: " << insertadasS3 << endl;
     cout << "  Palabras eliminadas: " << eliminadasS3 << endl;
-    cout << "  Memoria utilizada " << miArbolK.calcularMemNodo() << " bytes" << endl;
+    cout << "  Memoria utilizada: " << miArbolK.calcularMemNodo() << " bytes" << endl;
+    cout << "  Altura del arbol: " << miArbolK.altura() << endl;
     cout << "=============================================" << endl;
 
     cout << "Verificando consistencia..." << endl;
-    if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro") &&!miArbolK.buscar((uchar*)"palabra_que_no_existe_seguro")) {
+
+    if (!miGrilla.buscar("palabra_que_no_existe_seguro") && !miArreglo.buscar((uchar*)"palabra_que_no_existe_seguro") && !miArbolK.buscar((uchar*)"palabra_que_no_existe_seguro")) {
         cout << "Confirmado: Todas las estructuras finalizaron de forma consistente." << endl;
     }
-    
+
     return 0;
 }
-

@@ -1,276 +1,349 @@
 #include <iostream>
 #include <cstring>
 
-typedef unsigned char uchar;
-
 using namespace std;
 
-//Definir la Struct del arbol
+typedef unsigned char uchar;
 
 struct NodoK {
-    uchar** palabras; // arreglo de palabras guardadas en este nodo
-    NodoK** hijos; // arreglo de punteros a los hijos
-    int cantidad; // cantidad de palabras usadas en este nodo
+    uchar** palabras;
+    NodoK** hijos;
+    int cantidad;
 };
 
-//------------------------------clase principal-------------------------------------
-class ArbolK
-{
+class ArbolK {
 private:
-    //ATRIBUTOS
     NodoK* raiz;
-    int K; //Guarda la cantidad de claves
-    int cantidadPalabras;  //Un contador de palabras que hay en el arbol
-      
-    //********Funciones internas Basicas*********
-      
-    NodoK* crearNodo(){ //Funcion para crear un nuevo nodo
-        NodoK* nuevo =new NodoK;
+    int K;
+    int cantidadPalabras;
+
+    NodoK* crearNodo() {
+        NodoK* nuevo = new NodoK;
         nuevo->cantidad = 0;
         nuevo->palabras = new uchar*[K];
-        for (int i =0; i <K; i++){
+        nuevo->hijos = new NodoK*[K + 1];
+
+        for (int i = 0; i < K; i++) {
             nuevo->palabras[i] = nullptr;
         }
-        nuevo->hijos = new NodoK*[K +1];
-        for (int i =0; i <K +1; i++){
+
+        for (int i = 0; i <= K; i++) {
             nuevo->hijos[i] = nullptr;
         }
+
         return nuevo;
     }
 
-
-    int obtenerLargo(uchar* palabra) {
-        if (palabra == nullptr) return 0;
-        int largo = 0;
-        while (palabra[largo] != '\0') {
-            largo++;
+    int alturaRecursiva(NodoK* nodo) {
+        if (nodo == nullptr) {
+            return 0;
         }
-        return largo;
-      }
 
-    void liberarNodo(NodoK* nodo){ //Para eliminar una rama completa del arbol de manera recursiva
-        if (nodo == nullptr){
-                return;
-            }
-        for (int i = 0; i <= K; i++) {
-            if (nodo->hijos[i] != nullptr) {
-                liberarNodo(nodo->hijos[i]);
-            }
-        }
-        
-        for (int i = 0; i < nodo->cantidad; i++) { // Corregido: antes tenías 'pal'
-            liberarEspacio(nodo->palabras[i]);
-       }
-        delete[] nodo->palabras;
-        delete[] nodo->hijos;
-        delete nodo;
-    }
-
-    int calcularMemNodo(NodoK* nodo){ //Funcion para calcular la memoria ocupada por un nodo
-        if (nodo == nullptr) return 0;
-
-        int memoria = sizeof(NodoK);
-        memoria += sizeof(uchar*) * K;
-        memoria += sizeof(NodoK*) * (K + 1);
-
-        for (int i = 0; i < nodo->cantidad; i++) {
-            int largo = 0;
-            while (nodo->palabras[i][largo] != '\0') {
-                largo++;
-        }
-            memoria += (largo + 1) * sizeof(uchar);
-        }
+        int mayor = 0;
 
         for (int i = 0; i <= K; i++) {
-            memoria += calcularMemNodo(nodo->hijos[i]);
+            int alturaHijo = alturaRecursiva(nodo->hijos[i]);
+            if (alturaHijo > mayor) {
+                mayor = alturaHijo;
+            }
         }
 
-    return memoria;
+        return 1 + mayor;
     }
 
-    int compararPalabras(uchar* palabra1, uchar* palabra2){ //Compara palabra1 con palabra2 y devuelve negativo si palabra1 < palabra2, 0 si son iguales, y positivo si palabra1 > palabra2
-        int i =0;
-        while (palabra1[i] != '\0' && palabra2[i] != '\0' && palabra1[i] == palabra2[i]){
+    int compararPalabras(const uchar* palabra1, const uchar* palabra2) const {
+        int i = 0;
+        while (palabra1[i] != '\0' && palabra2[i] != '\0' && palabra1[i] == palabra2[i]) {
             i++;
         }
         return palabra1[i] - palabra2[i];
     }
 
+    int obtenerLargo(const uchar* palabra) const {
+        if (palabra == nullptr) return 0;
 
-    uchar* guardarPalabra(uchar* palabra){
         int largo = 0;
         while (palabra[largo] != '\0') {
             largo++;
         }
+        return largo;
+    }
+
+    uchar* guardarPalabra(const uchar* palabra) {
+        int largo = obtenerLargo(palabra);
         uchar* copia = new uchar[largo + 1];
-    
-        // Copiamos los caracteres de la palabra original a la copia
-        for (int i = 0; i < largo; i++) {
+
+        for (int i = 0; i <= largo; i++) {
             copia[i] = palabra[i];
         }
-        copia[largo] = '\0'; // Agregamos el carácter nulo al final de la copia
-    
+
         return copia;
     }
-    void liberarEspacio(uchar* palabra){ //Esto es solo para que no se ocupe memoria de más
-        if (palabra!= nullptr) {
+
+    void liberarPalabra(uchar* palabra) {
+        if (palabra != nullptr) {
             delete[] palabra;
         }
     }
-    int buscarPosNodo(NodoK* nodo, uchar* palabra){ //Esto es para buscar en que posicion del nodo esta la palabra que busco
-        if (nodo == nullptr) return -1;
-        for (int i = 0; i < nodo->cantidad; i++) {
-            if (compararPalabras(nodo->palabras[i], palabra) == 0) {
-                return i;
+
+    int buscarPosicion(NodoK* nodo, const uchar* palabra, bool& encontrada) const {
+        int izquierda = 0;
+        int derecha = nodo->cantidad - 1;
+        int posicion = nodo->cantidad;
+        encontrada = false;
+
+        while (izquierda <= derecha) {
+            int medio = izquierda + (derecha - izquierda) / 2;
+            int comp = compararPalabras(nodo->palabras[medio], palabra);
+
+            if (comp == 0) {
+                encontrada = true;
+                return medio;
+            }
+
+            if (comp < 0) {
+                izquierda = medio + 1;
+            } else {
+                posicion = medio;
+                derecha = medio - 1;
             }
         }
-        return -1;
+
+        return posicion;
     }
 
-    int hijoDondeBajar(NodoK* nodo, uchar* palabra){ // Esto es para que despues de encontrar el nodo con BuscarPosNodo, saber por cual bajar
-        int i = 0;
-        while (i < nodo->cantidad && compararPalabras(nodo->palabras[i], palabra) < 0) {
-            i++;
-        }
-        return i;
-    }
-
-
-    bool esHoja(NodoK* nodo){ // Revisa si el nodo no tiene hijos
+    bool esHoja(NodoK* nodo) const {
         if (nodo == nullptr) return true;
+
         for (int i = 0; i <= K; i++) {
             if (nodo->hijos[i] != nullptr) {
                 return false;
             }
         }
+
         return true;
     }
 
-    uchar* obtenerMinimo(NodoK* nodo){ // Busca la palabra mas pequena dentro de un subarbol
-        if (nodo == nullptr) return nullptr;
+    void liberarNodo(NodoK* nodo) {
+        if (nodo == nullptr) return;
 
-        NodoK* actual = nodo;
-        while (actual->hijos[0] != nullptr) {
-            actual = actual->hijos[0];
+        for (int i = 0; i <= K; i++) {
+            liberarNodo(nodo->hijos[i]);
         }
-        return actual->palabras[0];
+
+        for (int i = 0; i < nodo->cantidad; i++) {
+            liberarPalabra(nodo->palabras[i]);
+        }
+
+        delete[] nodo->palabras;
+        delete[] nodo->hijos;
+        delete nodo;
     }
 
-    uchar* obtenerMaximo(NodoK* nodo){ 
-        if (nodo == nullptr) return nullptr;
+    long long memoriaNodo(NodoK* nodo) const {
+        if (nodo == nullptr) return 0;
 
-        NodoK* actual = nodo;
+        long long total = sizeof(NodoK);
+        total += sizeof(uchar*) * K;
+        total += sizeof(NodoK*) * (K + 1);
 
-        while (actual->hijos[actual->cantidad] != nullptr) {
-            actual = actual->hijos[actual->cantidad];
+        for (int i = 0; i < nodo->cantidad; i++) {
+            total += (obtenerLargo(nodo->palabras[i]) + 1) * sizeof(uchar);
         }
 
-        return actual->palabras[actual->cantidad - 1];
+        for (int i = 0; i <= K; i++) {
+            total += memoriaNodo(nodo->hijos[i]);
+        }
+
+        return total;
     }
 
-    void borrarPalabraDeNodo(NodoK* nodo, int pos){ // Borra una palabra de un nodo y corre las demas a la izquierda
-        if (nodo == nullptr || pos < 0 || pos >= nodo->cantidad) return;
+    void separarHijo(NodoK* padre, int indice) {
+        NodoK* hijo = padre->hijos[indice];
+        NodoK* derecho = crearNodo();
 
-        liberarEspacio(nodo->palabras[pos]);
+        int medio = K / 2;
+        int cantidadDerecha = K - medio - 1;
 
-        for (int i = pos; i < nodo->cantidad - 1; i++) {
-            nodo->palabras[i] = nodo->palabras[i + 1];
+        derecho->cantidad = cantidadDerecha;
+
+        for (int j = 0; j < cantidadDerecha; j++) {
+            derecho->palabras[j] = hijo->palabras[medio + 1 + j];
+            hijo->palabras[medio + 1 + j] = nullptr;
         }
 
-        nodo->palabras[nodo->cantidad - 1] = nullptr;
-        nodo->cantidad--;
+        for (int j = 0; j <= cantidadDerecha; j++) {
+            derecho->hijos[j] = hijo->hijos[medio + 1 + j];
+            hijo->hijos[medio + 1 + j] = nullptr;
+        }
+
+        for (int j = padre->cantidad; j >= indice + 1; j--) {
+            padre->hijos[j + 1] = padre->hijos[j];
+        }
+        padre->hijos[indice + 1] = derecho;
+
+        for (int j = padre->cantidad - 1; j >= indice; j--) {
+            padre->palabras[j + 1] = padre->palabras[j];
+        }
+        padre->palabras[indice] = hijo->palabras[medio];
+        hijo->palabras[medio] = nullptr;
+
+        hijo->cantidad = medio;
+        padre->cantidad++;
     }
 
+    bool insertarNoLleno(NodoK* nodo, const uchar* palabra) {
+        bool encontrada = false;
+        int posicion = buscarPosicion(nodo, palabra, encontrada);
 
-    void borrarPalabraYReacomodarHijos(NodoK* nodo, int pos){
-        // Se usa cuando borramos una clave de un nodo interno.
-        // Ademas de correr palabras, corre los hijos de la derecha para no perder subarboles.
-        if (nodo == nullptr || pos < 0 || pos >= nodo->cantidad) return;
-
-        liberarEspacio(nodo->palabras[pos]);
-
-        for (int i = pos; i < nodo->cantidad - 1; i++) {
-            nodo->palabras[i] = nodo->palabras[i + 1];
-        }
-        nodo->palabras[nodo->cantidad - 1] = nullptr;
-
-        for (int i = pos + 1; i < K; i++) {
-            nodo->hijos[i] = nodo->hijos[i + 1];
-        }
-        nodo->hijos[K] = nullptr;
-
-        nodo->cantidad--;
-    }
-
-    bool eliminarRecursivo(NodoK*& nodo, uchar* palabra){
-        if (nodo == nullptr) {
+        if (encontrada) {
             return false;
         }
 
-        int pos = buscarPosNodo(nodo, palabra);
+        if (esHoja(nodo)) {
+            for (int j = nodo->cantidad - 1; j >= posicion; j--) {
+                nodo->palabras[j + 1] = nodo->palabras[j];
+            }
 
-        // Caso 1: la palabra esta en este nodo
-        if (pos != -1) {
+            nodo->palabras[posicion] = guardarPalabra(palabra);
+            nodo->cantidad++;
+            cantidadPalabras++;
+            return true;
+        }
 
-            // Caso 1A: si es hoja, se borra directamente
+        if (nodo->hijos[posicion] == nullptr) {
+            nodo->hijos[posicion] = crearNodo();
+        }
+
+        if (nodo->hijos[posicion]->cantidad == K) {
+            separarHijo(nodo, posicion);
+
+            int comp = compararPalabras(palabra, nodo->palabras[posicion]);
+
+            if (comp == 0) {
+                return false;
+            }
+
+            if (comp > 0) {
+                posicion++;
+            }
+        }
+
+        return insertarNoLleno(nodo->hijos[posicion], palabra);
+    }
+
+    uchar* obtenerMinimo(NodoK* nodo) const {
+        NodoK* actual = nodo;
+
+        while (actual != nullptr && actual->hijos[0] != nullptr) {
+            actual = actual->hijos[0];
+        }
+
+        if (actual == nullptr || actual->cantidad == 0) return nullptr;
+        return actual->palabras[0];
+    }
+
+    uchar* obtenerMaximo(NodoK* nodo) const {
+        NodoK* actual = nodo;
+
+        while (actual != nullptr && actual->hijos[actual->cantidad] != nullptr) {
+            actual = actual->hijos[actual->cantidad];
+        }
+
+        if (actual == nullptr || actual->cantidad == 0) return nullptr;
+        return actual->palabras[actual->cantidad - 1];
+    }
+
+    void borrarPalabraDeNodo(NodoK* nodo, int posicion) {
+        liberarPalabra(nodo->palabras[posicion]);
+
+        for (int i = posicion; i < nodo->cantidad - 1; i++) {
+            nodo->palabras[i] = nodo->palabras[i + 1];
+        }
+
+        nodo->palabras[nodo->cantidad - 1] = nullptr;
+        nodo->cantidad--;
+    }
+
+    bool eliminarRecursivo(NodoK*& nodo, const uchar* palabra) {
+        if (nodo == nullptr) return false;
+
+        bool encontrada = false;
+        int posicion = buscarPosicion(nodo, palabra, encontrada);
+
+        if (encontrada) {
             if (esHoja(nodo)) {
-                borrarPalabraDeNodo(nodo, pos);
+                borrarPalabraDeNodo(nodo, posicion);
                 cantidadPalabras--;
 
-                // Si el nodo quedo vacio, se elimina el nodo completo
                 if (nodo->cantidad == 0) {
                     delete[] nodo->palabras;
                     delete[] nodo->hijos;
                     delete nodo;
                     nodo = nullptr;
                 }
+
                 return true;
             }
 
-            // Caso 1B: si tiene hijo derecho, reemplazamos por el sucesor
-            if (nodo->hijos[pos + 1] != nullptr) {
-                uchar* sucesor = obtenerMinimo(nodo->hijos[pos + 1]);
+            if (nodo->hijos[posicion + 1] != nullptr) {
+                uchar* sucesor = obtenerMinimo(nodo->hijos[posicion + 1]);
 
-                liberarEspacio(nodo->palabras[pos]);
-                nodo->palabras[pos] = guardarPalabra(sucesor);
-
-                return eliminarRecursivo(nodo->hijos[pos + 1], sucesor);
+                if (sucesor != nullptr) {
+                    liberarPalabra(nodo->palabras[posicion]);
+                    nodo->palabras[posicion] = guardarPalabra(sucesor);
+                    return eliminarRecursivo(nodo->hijos[posicion + 1], sucesor);
+                }
             }
 
-            // Caso 1C: si no tiene hijo derecho, usamos el predecesor del hijo izquierdo
-            if (nodo->hijos[pos] != nullptr) {
-                uchar* predecesor = obtenerMaximo(nodo->hijos[pos]);
+            if (nodo->hijos[posicion] != nullptr) {
+                uchar* predecesor = obtenerMaximo(nodo->hijos[posicion]);
 
-                liberarEspacio(nodo->palabras[pos]);
-                nodo->palabras[pos] = guardarPalabra(predecesor);
-
-                return eliminarRecursivo(nodo->hijos[pos], predecesor);
+                if (predecesor != nullptr) {
+                    liberarPalabra(nodo->palabras[posicion]);
+                    nodo->palabras[posicion] = guardarPalabra(predecesor);
+                    return eliminarRecursivo(nodo->hijos[posicion], predecesor);
+                }
             }
 
-            // Caso raro: no es hoja, pero no tiene hijos alrededor de esa clave.
-            // Hay que mover los hijos tambien para no dejar un subarbol inaccesible.
-            borrarPalabraYReacomodarHijos(nodo, pos);
+            borrarPalabraDeNodo(nodo, posicion);
             cantidadPalabras--;
             return true;
         }
 
-        // Caso 2: la palabra no esta en este nodo, bajamos por el hijo correcto
-        int hijo = hijoDondeBajar(nodo, palabra);
-        return eliminarRecursivo(nodo->hijos[hijo], palabra);
-    }
-      
-public: 
-    // constructor y destructor
-    ArbolK(int valorK);
-    ~ArbolK();
-      
-    // funciones principales
-    
-    int calcularMemNodo() {
-        return calcularMemNodo(raiz); 
+        return eliminarRecursivo(nodo->hijos[posicion], palabra);
     }
 
-    bool insertar(uchar* palabra){
+    int alturaRecursiva(NodoK* nodo) const {
+        if (nodo == nullptr) return 0;
+
+        int mayor = 0;
+        for (int i = 0; i <= nodo->cantidad; i++) {
+            int h = alturaRecursiva(nodo->hijos[i]);
+            if (h > mayor) mayor = h;
+        }
+
+        return mayor + 1;
+    }
+
+public:
+
+    int altura() {
+        return alturaRecursiva(raiz);
+    }
+    
+    ArbolK(int valorK) {
+        raiz = nullptr;
+        K = valorK;
+        cantidadPalabras = 0;
+    }
+
+    ~ArbolK() {
+        vaciarArbol();
+    }
+
+    bool insertar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0') return false;
 
         if (raiz == nullptr) {
             raiz = crearNodo();
@@ -280,85 +353,84 @@ public:
             return true;
         }
 
+        if (raiz->cantidad == K) {
+            NodoK* nuevaRaiz = crearNodo();
+            nuevaRaiz->hijos[0] = raiz;
+            raiz = nuevaRaiz;
+            separarHijo(raiz, 0);
+        }
+
+        return insertarNoLleno(raiz, palabra);
+    }
+
+    bool buscar(uchar* palabra) const {
+        if (palabra == nullptr || palabra[0] == '\0') return false;
+
         NodoK* actual = raiz;
-        while (true) {
-        // Si la palabra ya existe en este nodo, no se permiten duplicados
-            if (buscarPosNodo(actual, palabra) != -1) {
-                return false;
+
+        while (actual != nullptr) {
+            bool encontrada = false;
+            int posicion = buscarPosicion(actual, palabra, encontrada);
+
+            if (encontrada) {
+                return true;
             }
 
-            int i = hijoDondeBajar(actual, palabra);
+            actual = actual->hijos[posicion];
+        }
 
-            // Si el hijo por el cual debemos bajar existe, descendemos
-            if (actual->hijos[i] != nullptr) {
-                actual = actual->hijos[i];
-            } else {
-                // Si no tiene hijo y el nodo actual TIENE espacio libre (< K)
-                if (actual->cantidad < K) {
-                // Desplazar elementos a la derecha para mantener el orden
-                    for (int j = actual->cantidad; j > i; j--) {
-                        actual->palabras[j] = actual->palabras[j - 1];
-                        actual->hijos[j + 1] = actual->hijos[j];
-                    }
-                    actual->hijos[i + 1] = actual->hijos[i];
-                
-                    actual->palabras[i] = guardarPalabra(palabra);
-                    actual->cantidad++;
-                    cantidadPalabras++;
-                    return true;
-                } else {
-                // Si el nodo está LLENO y el hijo es nulo, creamos un nuevo nodo hijo
-                    actual->hijos[i] = crearNodo();
-                    actual->hijos[i]->palabras[0] = guardarPalabra(palabra);
-                    actual->hijos[i]->cantidad = 1;
-                    cantidadPalabras++;
-                    return true;
+        return false;
+    }
+
+    bool eliminar(uchar* palabra) {
+        if (palabra == nullptr || palabra[0] == '\0' || raiz == nullptr) return false;
+
+        bool eliminado = eliminarRecursivo(raiz, palabra);
+
+        if (raiz != nullptr && raiz->cantidad == 0) {
+            NodoK* antiguaRaiz = raiz;
+            NodoK* nuevaRaiz = nullptr;
+
+            for (int i = 0; i <= K; i++) {
+                if (antiguaRaiz->hijos[i] != nullptr) {
+                    nuevaRaiz = antiguaRaiz->hijos[i];
+                    antiguaRaiz->hijos[i] = nullptr;
+                    break;
                 }
             }
+
+            delete[] antiguaRaiz->palabras;
+            delete[] antiguaRaiz->hijos;
+            delete antiguaRaiz;
+            raiz = nuevaRaiz;
         }
+
+        return eliminado;
     }
 
-    bool buscar(uchar* palabra){
-        NodoK* actual = raiz;
-        while (actual != nullptr) {
-        // Buscamos si está en este nodo
-            int pos = buscarPosNodo(actual, palabra);
-            if (pos != -1) {
-                return true; // Encontrada
-            }
-        // Si no está, vemos por cuál hijo descender
-            int siguienteHijo = hijoDondeBajar(actual, palabra);
-            actual = actual->hijos[siguienteHijo];
-        }
-        return false; //no existe
+    long long calcularMemNodo() const {
+        return sizeof(ArbolK) + memoriaNodo(raiz);
     }
 
-
-    bool eliminar(uchar* palabra){
-        if (raiz == nullptr){
-            return false;
-        }
-        return eliminarRecursivo(raiz, palabra);
+    int obtCantidPalabras() const {
+        return cantidadPalabras;
     }
-    
-    int obtCantidPalabras() { return cantidadPalabras; }
-    int mostrarK() { return K; }
-    bool estaVacio() { return raiz == nullptr; }
-    
+
+    int mostrarK() const {
+        return K;
+    }
+
+    bool estaVacio() const {
+        return raiz == nullptr;
+    }
+
+    int altura() const {
+        return alturaRecursiva(raiz);
+    }
+
     void vaciarArbol() {
         liberarNodo(raiz);
         raiz = nullptr;
         cantidadPalabras = 0;
     }
 };
-
-// Definición externa del constructor y destructor
-ArbolK::ArbolK(int valorK) {
-    raiz = nullptr;
-    K = valorK;
-    cantidadPalabras = 0;
-}
-
-ArbolK::~ArbolK() {
-    vaciarArbol();
-}
