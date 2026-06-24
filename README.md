@@ -1,39 +1,69 @@
-Tarea INFO088 - Etapa 1
+Tarea INFO088 - Etapa 2
 
-Matias Montecinos, Afra Rodríguez, Eduardo Pezo
+Integrantes:
+-Matías Montecinos
+-Afra Rodríguez
+-Eduardo Pezo
 
-Este programa implementa un arreglo dinamico ordenado a traves de lo siguiente:
+====================================DESCRIPCION GENERAL============================================================
+
+El fin de este programa es comparar 3 estructuras de datos dinamicas, permitiendo almacenar claves de tipo uchar*
+haciendo operaciones básicas como buscar, insertar y eliminar.
+
+Las tres soluciones implementadas son:
+
+1. Solución 1: Arreglo dinámico ordenado con índice auxiliar ASCII
+2. Solución 2: Grilla de niveles usando un factor "k"
+3. Solución 3: Árbol de búsqueda k-ario, donde cada nodo puede almacenar hasta "K" claves y hasta "K + 1" hijos.
+
+como funciona el main:
+
+1.lee el archivo "D1.txt", guardando sus palabras en memoria para construir las tres estructuras.
+	Durante este proceso se mide el tiempo de construcción de cada solución y se calcula una estimación de la memoria utilizada.
+
+2. Luego se buscan 10000 claves aleatorias existentes en D1. Permitiendo medir tiempos promedios de busqueda.
+
+3. luego se abre el archivo "D2.txt" y recorre sus palabras intercalando operaciones: una palabra se intenta insertar, la siguiente se intenta eliminar, y así sucesivamente. Si una palabra ya existe al momento de insertar, la estructura no se modifica. Si se intenta eliminar una palabra que no existe, la estructura tampoco cambia.
+
+Finalmente, el programa muestra los resultados comparativos de las tres soluciones.
+
+Datos que entrega:
+	Tiempo de construcción desde `D1.txt`.
+	Tiempo total y promedio de búsqueda.
+	Cantidad de palabras encontradas.
+	Cantidad de inserciones exitosas.
+	Cantidad de eliminaciones exitosas.
+	Tiempo de ejecución de las operaciones con `D2.txt`.
+	Memoria utilizada por cada estructura.
+	Altura del árbol en la Solución 3.
+
+=======================================================Ejecución: ===================================================
+
+Compilación:
+Para que compile el main.cpp y por rebote las 3 solución se ejecuta make, el cual se encarga de crear un nuevo archivo llamado programa.
+
+Para Ejecutar:
+El programa debe abrirse como "./programa" (en el bash), y de esta manera inicia el programa con un k = 8, en caso contario queriendo hacer las pruebas con distintos k, se debe ejecutar el comando "./programa k".
+
+//k es el valor que utiliza la solución 2 y 3, para crear las grillas con factor k, y para crear el arbol con k, y k + 1 correspondientemente.
+
+====================================================Archivos que incluye==============================================
+Archivos principales
+
+La carpeta del código fuente incluye los siguientes archivos:
+
+main.cpp: contiene el programa principal, lee los archivos `D1.txt` y `D2.txt`, construye las tres estructuras, ejecuta los experimentos y muestra los resultados.
+-Solucion1.cpp: contiene la implementación del arreglo dinámico ordenado con índice ASCII
+-Solucion2.cpp: contiene la implementación de la grilla de niveles con factor "K"
+-Solucion3.cpp: contiene la implementación del árbol k ario
+-Makefile: encargado de compilar el programa usando el comando bash: make
+
+Archivos de datos
+
+D1.txt: diccionario usado para construir inicialmente las estructuras.
+D2.txt: diccionario usado para intercalar inserciones y eliminaciones dinámicas.
 
 
-1. 	Primero se abre el archivo D1.txt, donde se encuentran las palabras que se van a cargar inicialmente en la estructura.
+==================================================Resultados esperados===========================================================
 
-2. 	Luego, cada palabra de D1 se inserta en el arreglo dinamico ordenado. El orden se mantiene dentro de la funcion insertar(), ya que antes de agregar una palabra se busca la posicion donde corresponde ubicarla. Despues, si es necesario, se desplazan las palabras hacia la derecha para hacer espacio.
-
-3. 	Mientras se cargan las palabras de D1, el programa mide el tiempo de construccion de la estructura. Tambien muestra una estimacion de la memoria utilizada, considerando los espacios reservados por el arreglo y el arreglo auxiliar de indices.
-
-4.	 Si al ejecutar el programa se entrega una palabra por terminal (por ejemplo ./programa abandon) la palabra se busca en estructura. Esta busqueda se realiza en la funcion buscar(), usando busqueda binaria.
-
-5.	 Despues se realizan 10000 busquedas con palabras existentes de D1. Estas busquedas sirven para medir un tiempo promedio, es importante destacar que se ordeno primero lexicograficamente, para luego buscarlo con busqueda binaria, de esta manera es muchisimo mas eficiente.
-
-7. 	Luego se abre el archivo D2.txt, que se usa para probar operaciones dinamicas sobre la estructura.
-
-8. 	El programa recorre las palabras de D2 intercalando operaciones: una palabra se intenta insertar, la siguiente se intenta eliminar, y asi sucesivamente.Si la palabra ya está repetida al insertar, la estructura no cambia. Si se intenta eliminar una palabra que no existe, tampoco se modifica.
-9.	 Finalmente, se muestran los resultados obtenidos: cantidad de operaciones realizadas, inserciones exitosas, eliminaciones exitosas, tiempos totales, tiempos promedio y la cantidad final de palabras guardadas en el arreglo.
-
-
-
-
--La carpeta codigo_fuente incluye:
-	main.cpp; donde se ejecuta el programa completo, se hace las pruebas y se entrega resultados correspondiente.
-	Para esto se hace un llamado a los dos siguientes documentos que tambien se encuentran en la carpeta.
-	dynamic_array.h, Donde se define la clase "ArregloDinamico", sus variables principales y las funciones que se pueden usar (buscar, insertar, eliminar, obtener tamaño)
-	dynamic_array.cpp, contiene el codigo completo de las funciones definidas en dynamic_array.h.
-
--La carpeta Data, incluye los diccionarios entregados por le profesor.
-- El Makefile permite compilar el codigo de forma rapida usando el comando make en la Terminal, el cual genera el ejecutable "programa", que es el archivo que se utiliza para ejecutar la tarea.
-
-
-
-
-Para ejecutar el programa, se ejecuta : make . 
-A continuacion se ingresa la siguiente linea de codigo: ./programa palabra_buscar_en_d1 (Importante aclarar que esto ultimo se hace solamente para experimentar tiempos de busqueda de esta palabra, y si existe o no)
+Al ejecutar el programa, se muestran por pantalla los resultados de construcción, búsqueda, inserción, eliminación, memoria utilizada y consistencia final de las tres estructuras. Estos datos nos permiten realizar la comparación entre los 3 datos.
